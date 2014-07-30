@@ -13,12 +13,13 @@ void setup() {
 }
 
 float voltageAverage = 2.5;
-int calibrateValueA = 2.7;
+
 float calibrateMassA = 0.0;
-float calibrateVoltageA = calibrateValueA * (5.0 / 1023.0);
-int calibrateValueB = 4.16;
-float calibrateVoltageB = calibrateValueB * (5.0 / 1023.0);
-float calibrateMassB = 65;
+float calibrateVoltageA = 2.7;
+
+float calibrateMassB = 65.0;
+float calibrateVoltageB = 4.16;
+
 
 Serial.print("Calibrate voltage A is: "); Serial.print(calibrateVoltageA); Serial.print("\t");
 Serial.print("Calibrate mass A is: "); Serial.println(calibrateMassA);
@@ -35,7 +36,7 @@ void loop() {
   voltageAverage = (0.90*voltageAverage + 0.10*voltage);
   
   // print out the value you read:
-    Serial.print("Voltage is: "); Serial.print(voltage); Serial.print("\t");
+  Serial.print("Voltage is: "); Serial.print(voltage); Serial.print("\t");
   Serial.print("sensorValue is: "); Serial.print(sensorValue); Serial.print("\t");
   Serial.print("voltageAverage is: "); Serial.println(voltageAverage);
 }
