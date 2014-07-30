@@ -6,12 +6,6 @@
  This example code is in the public domain.
  */
 
-// the setup routine runs once when you press reset:
-void setup() {
-  // initialize serial communication at 9600 bits per second:
-  Serial.begin(9600);
-}
-
 float voltageAverage = 2.5;
 
 float calibrateMassA = 0.0;
@@ -19,12 +13,18 @@ float calibrateVoltageA = 2.7;
 
 float calibrateMassB = 65.0;
 float calibrateVoltageB = 4.16;
-
+// the setup routine runs once when you press reset:
+void setup() {
+  // initialize serial communication at 9600 bits per second:
+  Serial.begin(9600);
 
 Serial.print("Calibrate voltage A is: "); Serial.print(calibrateVoltageA); Serial.print("\t");
 Serial.print("Calibrate mass A is: "); Serial.println(calibrateMassA);
 Serial.print("Calibrate voltage B is: "); Serial.print(calibrateVoltageB); Serial.print("\t");
 Serial.print("Calibrate mass B is: "); Serial.println(calibrateMassB);
+}
+
+
 
 // the loop routine runs over and over again forever:
 void loop() {
@@ -40,4 +40,3 @@ void loop() {
   Serial.print("sensorValue is: "); Serial.print(sensorValue); Serial.print("\t");
   Serial.print("voltageAverage is: "); Serial.println(voltageAverage);
 }
-
