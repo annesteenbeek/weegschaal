@@ -13,6 +13,10 @@ float calibrateVoltageA = 2.7;
 
 float calibrateMassB = 65.0;
 float calibrateVoltageB = 4.16;
+
+flot setupVolt; //voltage at setup
+float weight=0;
+int i;
 // the setup routine runs once when you press reset:
 void setup() {
   // initialize serial communication at 9600 bits per second:
@@ -22,6 +26,14 @@ Serial.print("Calibrate voltage A is: "); Serial.print(calibrateVoltageA); Seria
 Serial.print("Calibrate mass A is: "); Serial.println(calibrateMassA);
 Serial.print("Calibrate voltage B is: "); Serial.print(calibrateVoltageB); Serial.print("\t");
 Serial.print("Calibrate mass B is: "); Serial.println(calibrateMassB);
+
+timer = micros();
+
+while( micros()-timer < 100 ) { // dit stukje 100microsec laten draaien om gemiddelde te krijgen
+  i++
+  setupVolt+=analogRead(A0)/i;
+}
+Serial.print("Start Voltage is: "); Serial.print(setupVolt);
 }
 
 
@@ -39,4 +51,13 @@ void loop() {
   Serial.print("Voltage is: "); Serial.print(voltage); Serial.print("\t");
   Serial.print("sensorValue is: "); Serial.print(sensorValue); Serial.print("\t");
   Serial.print("voltageAverage is: "); Serial.println(voltageAverage);
+
+
+  // hier kun je data naar de serial port sturen
+  if (Serial.available() > 0) {
+    weight = Serial.read();
+    voltweight = voltage;
+    Serial.print("het huidige gewicht is: "); Serial.println(weight);
+  }
+
 }
