@@ -38,11 +38,11 @@ void loop() {
   //smooth out with average voltage
   voltageAverage = (0.90*voltageAverage + 0.10*voltage);
 
-  x=map(voltageAverage, startVolt, voltweight,0, weight);
-
+  x=map(voltageAverage*100, startVolt*100, voltweight*100,0, weight*100)/100;
+Serial.print("Gewicht is: "); Serial.print(x); Serial.print("\t"); Serial.print(voltageAverage); Serial.print("\t"); Serial.println(voltweight);
   // hier kun je data naar de serial port sturen
   if (Serial.available() > 0) {
-    weight = Serial.read();
+    weight = (float) Serial.parseInt();
     voltweight=voltageAverage;
     Serial.print("het huidige gewicht is: "); Serial.println(weight);
   }
