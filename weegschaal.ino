@@ -37,13 +37,25 @@ void loop() {
   voltage = sensorValue * (5.0 / 1023.0);
   //smooth out with average voltage
   voltageAverage = (0.90*voltageAverage + 0.10*voltage);
-
-  x=map(voltageAverage*100, startVolt*100, voltweight*100,0, weight*100)/100;
-Serial.print("Gewicht is: "); Serial.print(x); Serial.print("\t"); Serial.print(voltageAverage); Serial.print("\t"); Serial.println(voltweight);
+  float x = analogToLoad(voltageAverage);
+  
+  Serial.print("Gewicht is: "); Serial.print(x); Serial.print("\t"); Serial.print(voltageAverage); Serial.print("\t"); Serial.println(voltweight);
   // hier kun je data naar de serial port sturen
   if (Serial.available() > 0) {
     weight = (float) Serial.parseInt();
     voltweight=voltageAverage;
     Serial.print("het huidige gewicht is: "); Serial.println(weight);
   }
+}
+
+float analogToLoad(float analogval){
+
+  // using a custom map-function, because the standard arduino map function only uses int
+  float load = mapfloat(analogval, startVolt, voltweight, 0, weight);
+  return load;
+}
+
+float mapfloat(float x, float in_min, float in_max, float out_min, float out_max)
+{
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
