@@ -35,11 +35,7 @@ void loop() {
   voltage = sensorValue * (5.0 / 1023.0);
   //smooth out with average voltage
   voltageAverage = (0.90*voltageAverage + 0.10*voltage);
-<<<<<<< HEAD
-  x = 52.788*(voltageAverage - startVolt);
-=======
   float x = analogToLoad(voltageAverage);
->>>>>>> bd7c734934f257ea0e922b96cb34177dc0ef49ff
 
   Serial.print("Gewicht is: "); 
   Serial.print(x); 
@@ -49,34 +45,6 @@ void loop() {
   Serial.println(voltweight);
 
   // hier kun je data naar de serial port sturen
-<<<<<<< HEAD
-  // int j=0;
-  // char buffer[100];
-  // while (Serial.available() && j<99) {
-  //   buffer[j++] = Serial.read();
-  // }
-  // buffer[i++]='\0';
-  // if(j>0){
-  //   Serial.println((char*)buffer);
-  //   if(strcmp(buffer, "reset") == 0){
-  //     Serial.println("Het wordt gereset!");
-  //     timer = micros();
-  //     while( micros()-timer < 100 ) { // dit stukje 100microsec laten draaien om gemiddelde te krijgen
-  //       i++;
-  //       startVolt+=(analogRead(A0)* (5.0 / 1023.0))/i;
-  //     }
-  //     i=0;
-  //     Serial.print("Start Voltage is: "); 
-  //     Serial.println(startVolt);
-  //   }
-  //   else{      
-  //     weight = atof(buffer);
-  //     voltweight=voltageAverage;
-  //     Serial.print("het huidige gewicht is: "); 
-  //     Serial.println(weight);
-  //   }
-  // }
-=======
   int j=0;
   char buffer[100];
   while (Serial.available() && j<99) {
@@ -104,24 +72,10 @@ void loop() {
     }
   }
   delay(200);
->>>>>>> bd7c734934f257ea0e922b96cb34177dc0ef49ff
 }
 
 //functies:
 
-<<<<<<< HEAD
-// float analogToLoad(float analogval){
-
-//   // using a custom map-function, because the standard arduino map function only uses int
-//   float load = mapfloat(analogval, startVolt, voltweight, 0, weight);
-//   return load;
-// }
-
-// float mapfloat(float x, float in_min, float in_max, float out_min, float out_max)
-// {
-//   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-// }
-=======
 float analogToLoad(float analogval){
 
   // using a custom map-function, because the standard arduino map function only uses int
@@ -134,6 +88,5 @@ float mapfloat(float x, float in_min, float in_max, float out_min, float out_max
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
->>>>>>> bd7c734934f257ea0e922b96cb34177dc0ef49ff
 
 
