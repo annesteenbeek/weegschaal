@@ -3,7 +3,7 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import serial
-import time
+#import time
 ser=serial.Serial(0)
 #port=ser.name
 have_appindicator = True
@@ -23,9 +23,7 @@ class MyIndicator:
     ## functions to handle events    
     def quit(self, widget, data=None):
         gtk.main_quit()
-        ser.close()
-        
-        
+        ser.close()        
         
     def VulGewichtIn(self):
 
@@ -42,7 +40,6 @@ class MyIndicator:
         self.popup.ok.connect("clicked", self.on_ok_clicked)
         self.popup.vbox.pack_start(self.popup.ok, True, True, 0)
         self.popup.show_all()
-
 
     def on_cancel_clicked(self, button):    
         self.popup.destroy()
@@ -68,27 +65,23 @@ class MyIndicator:
                 emptyweight = self.VulGewichtIn()                              
             else:    
                 emptyweight = kg
-                self.savefile(name)                                         
+                self.writeArduino()
+                self.savefile(name)                                                        
 
     def readArduino(self):
         global gewicht
         # while True: 
         #     gewicht = ser.readline()
-        gewicht = gewicht+0.1
-        print(gewicht)
         self.menuWeight.get_child().set_text('Het fust weegt {printWeight} Kg'.format(printWeight = gewicht + emptyweight))
         bier = '{nrbier}L'.format(nrbier = gewicht)
         self.ind.set_label(bier)
         gtk.timeout_add(PING_FREQUENCY * 1000, self.readArduino)
 
     def writeArduino(self, *button):
+        print("serial")
         #ser.write(emptyweight)
-        print(emptyweight)
         #ser.write(suboptionsLed.get_active())
-        print(self.suboptionsLed.get_active())
-        #ser.write(suboptionsNixie.get_active())
-        print(self.suboptionsNixie.get_active())
-               
+        #ser.write(suboptionsNixie.get_active())               
 
     def savefile(self, name):
         global stelgewicht
@@ -117,9 +110,6 @@ class MyIndicator:
         stelgewicht = lines[4].rstrip('\n')
         andergewicht = 'Ander gewicht: {custweight}'.format(custweight = stelgewicht)
         self.setcustomweight.get_child().set_text(andergewicht)
-
-        
-
              
     ## Initialise
     def __init__(self):        
@@ -197,12 +187,8 @@ class MyIndicator:
     def main(self):
         gtk.main()
 
-
 if __name__ == "__main__":
    bier = '{nrbier}L'.format(nrbier = gewicht)
    indicator = MyIndicator()
    indicator.ind.set_label(bier)
    indicator.main()
-   
-
-
