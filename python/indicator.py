@@ -1,8 +1,10 @@
+#!/usr/bin/env python
 import pygtk
 pygtk.require('2.0')
 import gtk
 import serial
-#ser=serial.Serial(0)
+import time
+ser=serial.Serial(0)
 #port=ser.name
 have_appindicator = True
 try:
@@ -13,7 +15,8 @@ except:
 PING_FREQUENCY = 1 # seconds
 stelgewicht = '-'
 andergewicht = 'Ander gewicht: {custweight}'.format(custweight = stelgewicht)
-weight = 10
+gewicht = 0
+emptyweight = 0
 
 class MyIndicator:
 
@@ -23,11 +26,12 @@ class MyIndicator:
         ser.close()
         
         
+        
     def VulGewichtIn(self):
 
         self.popup = gtk.Dialog(title='Gewicht')
         self.popup.entry = gtk.Entry()
-        self.popup.entry.set_text("Gewicht")
+        self.popup.entry.set_text('{custweight}'.format(custweight = stelgewicht))
         self.popup.vbox.pack_start(self.popup.entry, True, True, 0)
         
         self.popup.cancel = gtk.Button("Cancel")
@@ -39,27 +43,86 @@ class MyIndicator:
         self.popup.vbox.pack_start(self.popup.ok, True, True, 0)
         self.popup.show_all()
 
+
     def on_cancel_clicked(self, button):    
         self.popup.destroy()
+        self.readArduino() 
     
     def on_ok_clicked(self, button):
-        stelgewicht = self.popup.entry.get_text()
+        global emptyweight
+        global stelgewicht
+        stelgewicht = float(self.popup.entry.get_text())
         andergewicht = 'Ander gewicht: {custweight}'.format(custweight = stelgewicht)
         self.setcustomweight.get_child().set_text(andergewicht)
         self.popup.destroy()
-        return stelgewicht
+        emptyweight = stelgewicht
+        self.writeArduino()
+        self.savefile("setcustomweight")
+        self.readArduino()        
 
     def on_button_toggled(self, button, name, kg):
+        global emptyweight
+        
         if button.get_active():
             if name=="VulGewichtIn":
-                emptyweight=self.VulGewichtIn()
+                emptyweight = self.VulGewichtIn()                              
             else:    
                 emptyweight = kg
+                self.savefile(name)                                         
+
+    def readArduino(self):
+        global gewicht
+        # while True: 
+        #     gewicht = ser.readline()
+        gewicht = gewicht+0.1
+        print(gewicht)
+        self.menuWeight.get_child().set_text('Het fust weegt {printWeight} Kg'.format(printWeight = gewicht + emptyweight))
+        bier = '{nrbier}L'.format(nrbier = gewicht)
+        self.ind.set_label(bier)
+        gtk.timeout_add(PING_FREQUENCY * 1000, self.readArduino)
+
+    def writeArduino(self, *button):
+        #ser.write(emptyweight)
+        print(emptyweight)
+        #ser.write(suboptionsLed.get_active())
+        print(self.suboptionsLed.get_active())
+        #ser.write(suboptionsNixie.get_active())
+        print(self.suboptionsNixie.get_active())
+               
+
+    def savefile(self, name):
+        global stelgewicht
+        savefile = open('.savefile','w')
+        savefile.write('self.{beerbutton}.set_active(True)'.format(beerbutton=name)+'\n')
+
+        savefile.write('{weightprint}'.format(weightprint=emptyweight)+'\n')
+        savefile.write('self.suboptionsLed.set_active({ledson})'.format(ledson=self.suboptionsLed.get_active())+'\n')
+        savefile.write('self.suboptionsNixie.set_active({nixieson})'.format(nixieson=self.suboptionsNixie.get_active())+'\n')
+        if name == "setcustomweight":
+            savefile.write('{weightprint}'.format(weightprint=emptyweight))
         else:
-            state = "off"
+            savefile.write('{weightprint}'.format(weightprint=stelgewicht))
+        savefile.close() # you can omit in most cases as the destructor will call if
         
+    def loadfile(self):
+        global stelgewicht
+        global emptyweight
+        savefile = open('.savefile', 'r')
+        lines=savefile.readlines()
+        savefile.close()
+        exec(lines[0].rstrip('\n')) #Togle saved beer button
+        emptyweight = float(lines[1].rstrip('\n'))
+        exec(lines[2].rstrip('\n')) #Toggle saved led status
+        exec(lines[3]) #Toggle saved nixie status
+        stelgewicht = lines[4].rstrip('\n')
+        andergewicht = 'Ander gewicht: {custweight}'.format(custweight = stelgewicht)
+        self.setcustomweight.get_child().set_text(andergewicht)
+
+        
+
+             
     ## Initialise
-    def __init__(self):
+    def __init__(self):        
         
         ## Create appindicator object
         if have_appindicator:
@@ -73,8 +136,8 @@ class MyIndicator:
         
         ## Create menu object
         self.menu = gtk.Menu()    ## create the main menu item
-        menuWeight = gtk.MenuItem('Het fust weegt {printWeight} Kg'.format(printWeight = weight))
-        menuWeight.set_sensitive(False)
+        self.menuWeight = gtk.MenuItem('Het fust weegt {printWeight} Kg'.format(printWeight = gewicht + emptyweight))
+        self.menuWeight.set_sensitive(False)
         menuItemBeer = gtk.MenuItem('Beer')
         menuItemOptions = gtk.MenuItem('Options')
         menuItemQuit = gtk.MenuItem('Quit')
@@ -85,54 +148,61 @@ class MyIndicator:
         menuItemBeer.set_submenu(self.menubeer)	## Make MenuItemBeer submenuable
         menuItemOptions.set_submenu(self.menuoptions) ## make the menuoptions a submenu of itemoptions
                 
-        submenuKeg = gtk.RadioMenuItem(label='Keg')
-        submenuGrolsh = gtk.RadioMenuItem(group=submenuKeg, label='Grolsh')
-        submenuHeineken = gtk.RadioMenuItem(group=submenuKeg, label='Heineken')
-        submenuUttinger = gtk.RadioMenuItem(group=submenuKeg, label='Uttinger')
-        submenu30L_Uttinger = gtk.RadioMenuItem(group=submenuKeg, label='30L Uttinger')
-        self.setcustomweight = gtk.RadioMenuItem(group=submenuKeg, label=andergewicht)
-        suboptionsLed = gtk.CheckMenuItem("Backlight LEDs")
-        suboptionsNixie = gtk.CheckMenuItem("Nixies")
+        self.submenuKeg = gtk.RadioMenuItem(label='Keg')
+        self.submenuGrolsh = gtk.RadioMenuItem(group=self.submenuKeg, label='Grolsh')
+        self.submenuHeineken = gtk.RadioMenuItem(group=self.submenuKeg, label='Heineken')
+        self.submenuUttinger = gtk.RadioMenuItem(group=self.submenuKeg, label='Uttinger')
+        self.submenu30L_Uttinger = gtk.RadioMenuItem(group=self.submenuKeg, label='30L Uttinger')
+        self.setcustomweight = gtk.RadioMenuItem(group=self.submenuKeg, label=andergewicht)
+        self.suboptionsLed = gtk.CheckMenuItem("Backlight LEDs")
+        self.suboptionsNixie = gtk.CheckMenuItem("Nixies")
         
-        self.menu.append(menuWeight)
+        self.menu.append(self.menuWeight)
         self.menu.append(gtk.SeparatorMenuItem())
         self.menu.append(menuItemBeer)
         self.menu.append(menuItemOptions)
         self.menu.append(menuItemQuit)
         
-        self.menubeer.append(submenuKeg)	## append to the submenu menubeer
-        self.menubeer.append(submenuGrolsh)
-        self.menubeer.append(submenuHeineken)
-        self.menubeer.append(submenuUttinger)
-        self.menubeer.append(submenu30L_Uttinger)
+        self.menubeer.append(self.submenuKeg)	## append to the submenu menubeer
+        self.menubeer.append(self.submenuGrolsh)
+        self.menubeer.append(self.submenuHeineken)
+        self.menubeer.append(self.submenuUttinger)
+        self.menubeer.append(self.submenu30L_Uttinger)
         self.menubeer.append(gtk.SeparatorMenuItem())
         self.menubeer.append(self.setcustomweight)
         
-        self.menuoptions.append(suboptionsLed)
-        self.menuoptions.append(suboptionsNixie)
+        self.menuoptions.append(self.suboptionsLed)
+        self.menuoptions.append(self.suboptionsNixie)
 
         menuItemQuit.connect('activate', self.quit, "quit")
 
-        submenuKeg.connect("toggled", self.on_button_toggled, "Keg", 15)
-        submenuGrolsh.connect("toggled", self.on_button_toggled, "Grolsh", 14.3)
-        submenuHeineken.connect("toggled", self.on_button_toggled, "Heineken", 17)
-        submenuUttinger.connect("toggled", self.on_button_toggled, "Uttinger", 19)
-        submenu30L_Uttinger.connect("toggled", self.on_button_toggled, "Uttinger30L", 12)
-        self.setcustomweight.connect("toggled", self.on_button_toggled, "VulGewichtIn", 2)
+        self.loadfile()
 
+        self.submenuKeg.connect("toggled", self.on_button_toggled, "submenuKeg", 15)
+        self.submenuGrolsh.connect("toggled", self.on_button_toggled, "submenuGrolsh", 14.3)
+        self.submenuHeineken.connect("toggled", self.on_button_toggled, "submenuHeineken", 17)
+        self.submenuUttinger.connect("toggled", self.on_button_toggled, "submenuUttinger", 19)
+        self.submenu30L_Uttinger.connect("toggled", self.on_button_toggled, "submenu30L_Uttinger", 12)
+        self.setcustomweight.connect("activate", self.on_button_toggled, "VulGewichtIn", 2)
+
+        self.suboptionsLed.connect("activate", self.writeArduino)
+        self.suboptionsNixie.connect("activate", self.writeArduino)
+        
         ## Show all in menu (instead of calling .show() for each item)
         self.menu.show_all()
-
+        
         ## Add constructed menu as indicator menu
-        self.ind.set_menu(self.menu)    
+        self.ind.set_menu(self.menu)   
+        self.readArduino() 
     def main(self):
-        ## gtk.timeout_add(PING_FREQUENCY, self.updatebeer)
         gtk.main()
-        return 0
+
 
 if __name__ == "__main__":
-   bier = '{nrbier}L'.format(nrbier = 10.0)
+   bier = '{nrbier}L'.format(nrbier = gewicht)
    indicator = MyIndicator()
    indicator.ind.set_label(bier)
-   #indicator.ind.set_use_markup(True)
    indicator.main()
+   
+
+
