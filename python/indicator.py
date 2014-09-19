@@ -41,6 +41,8 @@ class MyIndicator:
         self.popup.vbox.pack_start(self.popup.ok, True, True, 0)
         self.popup.show_all()
 
+        
+
     def on_cancel_clicked(self, button):    
         self.popup.destroy()
         self.readArduino() 
@@ -78,10 +80,18 @@ class MyIndicator:
         gtk.timeout_add(PING_FREQUENCY * 1000, self.readArduino)
 
     def writeArduino(self, *button):
-        print("serial")
-        #ser.write(emptyweight)
-        #ser.write(suboptionsLed.get_active())
-        #ser.write(suboptionsNixie.get_active())               
+        if self.suboptionsLed.get_active():     # stuur het fustgewicht, nixies aan/uit en leds aan/uit als 1 getal naar de arduino.
+            leds=1
+        else:
+            leds = 0
+
+        if self.suboptionsNixie.get_active():
+            nixies = 10
+        else:
+            nixies = 0
+        sendserial = emptyweight * 100 + leds + nixies
+        print(sendserial)
+        #ser.write(sendserial)
 
     def savefile(self, name):
         global stelgewicht

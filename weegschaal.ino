@@ -8,7 +8,6 @@ float weight;
 int latchPin = 8;
 int clockPin = 12;
 int dataPin = 11;
-int x; //create a counting variable
 byte data0, data1;
 int byteArray[10];
 int num0, num1, num2;
@@ -22,9 +21,7 @@ void setup() {
   pinMode(latchPin, OUTPUT);
   pinMode(dataPin, OUTPUT);
   pinMode(clockPin, OUTPUT);
-  // initialize serial communication at 9600 bits per second:
   Serial.begin(9600);
-
 
   byteArray[0] = 0; //0000
   byteArray[1] = 1; //0001
@@ -46,7 +43,7 @@ void loop() {
   // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
   //voltageAverage = (0.5*voltageAverage + 0.5*voltage);
 
-  weight = map(sensorValue, startsensor, calsensor, 0, calweight*10); // het gewicht*10
+  weight = map(sensorValue, startsensor, calsensor, 0, calweight); // het gewicht*10
  
   Serial.print("Gewicht is: "); 
   Serial.print(weight); 
@@ -57,17 +54,25 @@ void loop() {
   if (Serial.available() ) {
     calweight = Serial.parseInt(); // Pak het gewicht in INT
     calsensor = sensorValue;    // bewaar het bijbehorende Sensorval
+    // int extradata = calweight/100;
+    // nixies = (calweight - extradata*100)/10;
+    // leds = (calweight-extradata*100)-nixies*10;
+
+    if (calweight ==0 ) {
+      startsensor = sensorValue;
+    }
   }
+
 
   num0 = weight/100; // vind het eerste getal
   num1 = weight/10 - num0*10; // vind het 2e getal
-  num2 = weight - num0*100 - num1*10; // vind het 3e getal
+  num2 = weight/1 - num0*100 - num1*10; // vind het 3e getal
 
   data0 = (byte) (byteArray[num0] | (byteArray[num1]<<4)); // 1e en 2e 4 bits
   data1 = (byte) (byteArray[num2] | (byteArray[0]<<4)); // second shift register data
   digitalWrite(latchPin, 0); 
-  shiftOut(dataPin, clockPin, data0); // stuur naar 1e shift register
   shiftOut(dataPin, clockPin, data1); // stuur naar 2e shift register
+  shiftOut(dataPin, clockPin, data0); // stuur naar 1e shift register
   digitalWrite(latchPin,1);
 }
 
