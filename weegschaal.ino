@@ -41,7 +41,7 @@ void setup() {
 // the loop routine runs over and over again forever:
 void loop() {
   int count;
-  int arraySize = 50;
+  int arraySize = 200;
   int sensorArray[arraySize];
   long sensorTotal = 0;
   float sensorAverage;
@@ -57,7 +57,7 @@ void loop() {
   weight = map(sensorAverage, sensorStart, sensorLoaded, weight1, weight2); // het gewicht*10
  
   Serial.print("Gewicht is: "); 
-  Serial.print(weight); 
+  Serial.print((float) weight/10); 
   Serial.print("\t"); 
   Serial.print("SensorValue: "); 
   Serial.println(sensorAverage);
@@ -92,6 +92,7 @@ void loop() {
     shiftOut(dataPin, clockPin, data0); // stuur naar 1e shift register
     digitalWrite(latchPin,1);
 
+   delay(1000);
 }
  // Functie voor het sturen van data naar de shift registers
 void shiftOut(int myDataPin, int myClockPin, byte myDataOut) {
