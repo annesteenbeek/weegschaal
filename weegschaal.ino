@@ -1,8 +1,10 @@
 int sensorValue;
-int startsensor=0;
-int calweight=0;
-int calsensor=0;
+int sensorStart;
+int sensorLoaded;
+int weight2;
+int weight1;
 float weight;
+int k;
 
 
 int latchPin = 8;
@@ -43,11 +45,6 @@ void loop() {
   int sensorArray[arraySize];
   long sensorTotal = 0;
   float sensorAverage;
-  
-  // read the input on analog pin 0:
-  //sensorValue = analogRead(A0);
-  // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
-  //voltageAverage = (0.5*voltageAverage + 0.5*voltage);
    
   for (count = 0; count < arraySize; count = count + 1){
     // read the input on analog pin 0:
@@ -57,24 +54,30 @@ void loop() {
     //Serial.print(sensorTotal); Serial.print(" ");
   }
  
-  weight = map(sensorAverage, startsensor, calsensor, 0, calweight); // het gewicht*10
+  weight = map(sensorAverage, sensorStart, sensorLoaded, weight1, weight2); // het gewicht*10
  
   Serial.print("Gewicht is: "); 
   Serial.print(weight); 
   Serial.print("\t"); 
   Serial.print("SensorValue: "); 
   Serial.println(sensorAverage);
-
-  if (Serial.available() ) {
-    calweight = Serial.parseInt(); // Pak het gewicht in INT
-    calsensor = sensorAverage;    // bewaar het bijbehorende Sensorval
-    // int extradata = calweight/100;
-    // nixies = (calweight - extradata*100)/10;
-    // leds = (calweight-extradata*100)-nixies*10;
-
-    if (calweight ==0 ) {
-      startsensor = sensorAverage;
-    }
+  
+  //Serial data can be sended to the serial port
+  
+  //The first input defines weight 1
+  if (Serial.available() > 0 && k == 0) {
+    weight1 = (float) Serial.parseInt();
+    sensorStart=sensorAverage;
+    Serial.print("weight 1 is: "); Serial.println(weight1);
+    k = 1;
+  }
+  
+  //The second input defines weight 2
+  if (Serial.available() > 0 && k == 1) {
+    weight2 = (float) Serial.parseInt();
+    sensorLoaded=sensorAverage;
+    Serial.print("weight 2 is: "); Serial.println(weight2);
+    k = 0;
   }
 
     int number = weight;
