@@ -38,28 +38,42 @@ void setup() {
 
 // the loop routine runs over and over again forever:
 void loop() {
+  int count;
+  int arraySize = 50;
+  int sensorArray[arraySize];
+  long sensorTotal = 0;
+  float sensorAverage;
+  
   // read the input on analog pin 0:
-  sensorValue = analogRead(A0);
+  //sensorValue = analogRead(A0);
   // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
   //voltageAverage = (0.5*voltageAverage + 0.5*voltage);
-
-  weight = map(sensorValue, startsensor, calsensor, 0, calweight); // het gewicht*10
+   
+  for (count = 0; count < arraySize; count = count + 1){
+    // read the input on analog pin 0:
+    sensorArray[count] = analogRead(A0);
+    sensorTotal = sensorTotal + sensorArray[count];
+    sensorAverage = sensorTotal/arraySize;
+    //Serial.print(sensorTotal); Serial.print(" ");
+  }
+ 
+  weight = map(sensorAverage, startsensor, calsensor, 0, calweight); // het gewicht*10
  
   Serial.print("Gewicht is: "); 
   Serial.print(weight); 
   Serial.print("\t"); 
   Serial.print("SensorValue: "); 
-  Serial.println(sensorValue);
+  Serial.println(sensorAverage);
 
   if (Serial.available() ) {
     calweight = Serial.parseInt(); // Pak het gewicht in INT
-    calsensor = sensorValue;    // bewaar het bijbehorende Sensorval
+    calsensor = sensorAverage;    // bewaar het bijbehorende Sensorval
     // int extradata = calweight/100;
     // nixies = (calweight - extradata*100)/10;
     // leds = (calweight-extradata*100)-nixies*10;
 
     if (calweight ==0 ) {
-      startsensor = sensorValue;
+      startsensor = sensorAverage;
     }
   }
 
@@ -71,11 +85,11 @@ void loop() {
     data0 = (byte) (byteArray[num2] | (byteArray[num1]<<4)); // 1e en 2e 4 bits
     data1 = (byte) (byteArray[num0] | (byteArray[num0]<<4)); // second shift register data
     digitalWrite(latchPin, 0); 
-    SendtoShift(dataPin, clockPin, data1); // stuur naar 2e shift register
-    SendtoShift(dataPin, clockPin, data0); // stuur naar 1e shift register
+    //SendtoShift(dataPin, clockPin, data1); // stuur naar 2e shift register
+    shiftOut(dataPin, clockPin, data0); // stuur naar 1e shift register
     digitalWrite(latchPin,1);
 
-
+}
  // Functie voor het sturen van data naar de shift registers
 void shiftOut(int myDataPin, int myClockPin, byte myDataOut) {
   // This shifts 8 bits out MSB first, 
