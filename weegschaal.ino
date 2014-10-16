@@ -40,11 +40,11 @@ void setup() {
 void loop() {
   // read the input on analog pin 0:
   sensorValue = analogRead(A0);
-  // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
-  //voltageAverage = (0.5*voltageAverage + 0.5*voltage);
+  // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V)
+:  //voltageAverage = (0.5*voltageAverage + 0.5*voltage);
 
   weight = map(sensorValue, startsensor, calsensor, 0, calweight); // het gewicht*10
- 
+
   Serial.print("Gewicht is: "); 
   Serial.print(weight); 
   Serial.print("\t"); 
@@ -63,21 +63,21 @@ void loop() {
     }
   }
 
-    int number = weight;
+  int number = weight;
     num0 = number/100; // vind het eerste getal
     num1 = number/10 - num0*10; // vind het 2e getal
     num2 = number - num0*100 - num1*10; // vind het 3e getal
-  
+
     data0 = (byte) (byteArray[num2] | (byteArray[num1]<<4)); // 1e en 2e 4 bits
     data1 = (byte) (byteArray[num0] | (byteArray[num0]<<4)); // second shift register data
     digitalWrite(latchPin, 0); 
-    SendtoShift(dataPin, clockPin, data1); // stuur naar 2e shift register
-    SendtoShift(dataPin, clockPin, data0); // stuur naar 1e shift register
+    shiftOut(dataPin, clockPin, data1); // stuur naar 2e shift register
+    shiftOut(dataPin, clockPin, data0); // stuur naar 1e shift register
     digitalWrite(latchPin,1);
-
+  }
 
  // Functie voor het sturen van data naar de shift registers
-void shiftOut(int myDataPin, int myClockPin, byte myDataOut) {
+ void shiftOut(int myDataPin, int myClockPin, byte myDataOut) {
   // This shifts 8 bits out MSB first, 
   //on the rising edge of the clock,
   //clock idles low
