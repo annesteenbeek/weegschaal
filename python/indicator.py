@@ -3,8 +3,7 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import serial
-#import time
-ser=serial.Serial(0)
+ser = serial.Serial(0)
 #port=ser.name
 have_appindicator = True
 try:
@@ -72,7 +71,7 @@ class MyIndicator:
 
     def readArduino(self):
         global gewicht
-        # while True: 
+        #while True: 
         #     gewicht = ser.readline()
         self.menuWeight.get_child().set_text('Het fust weegt {printWeight} Kg'.format(printWeight = gewicht + emptyweight))
         bier = '{nrbier}L'.format(nrbier = gewicht)
@@ -91,7 +90,7 @@ class MyIndicator:
             nixies = 0
         sendserial = emptyweight * 100 + leds + nixies
         print(sendserial)
-        #ser.write(sendserial)
+        ser.write(sendserial)
 
     def savefile(self, name):
         global stelgewicht
