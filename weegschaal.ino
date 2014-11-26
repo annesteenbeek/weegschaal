@@ -6,7 +6,7 @@ int sensorOutput=0; // average sensor output for #counts
 int weight2;
 int weight1;
 float weight;
-int k;
+int k=0;
 int count=0;
 int countmax = 10;
 int computerdata = 0;
@@ -65,13 +65,7 @@ void loop() {
  
   weight = map(sensorOutput, sensorStart, sensorLoaded, weight1, weight2); // het gewicht*10
 
-  // Serial.print("Gewicht is: "); 
-  // Serial.print((float) weight/10); 
-  // Serial.print("\t"); 
-  // Serial.print("SensorValue: "); 
-  // Serial.println(sensorAverage);
-  
- // MANUAL INPUT OF WEIGHT DATA OVER SERIAL
+  // MANUAL INPUT OF WEIGHT DATA OVER SERIAL
   // //The first input defines weight 1
   // if (Serial.available() > 0 && k == 0) {
   //   weight1 = (float) Serial.parseInt();
@@ -91,6 +85,10 @@ void loop() {
 
 
 
+// toDo:
+// store empty weight in memory
+// calibratie data opslaan in geheugen
+// relais fixen zodat je power supply echt uit kunt zetten.
 
 
 
@@ -105,7 +103,7 @@ if (Serial.available() != 0){
 }
 
 if (nixieson == 1){
-  int number = weight - emptyweight;
+  int number = weight - emptyweight*10;
     num0 = number/100; // vind het eerste getal
     num1 = number/10 - num0*10; // vind het 2e getal
     num2 = number - num0*100 - num1*10; // vind het 3e getal

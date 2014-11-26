@@ -151,7 +151,7 @@ class MyIndicator:
         self.submenuGrolsh = gtk.RadioMenuItem(group=self.submenuKeg, label='Grolsh')
         self.submenuHeineken = gtk.RadioMenuItem(group=self.submenuKeg, label='Heineken')
         self.submenuUttinger = gtk.RadioMenuItem(group=self.submenuKeg, label='Uttinger')
-        self.submenu30L_Uttinger = gtk.RadioMenuItem(group=self.submenuKeg, label='30L Uttinger')
+        self.submenu30L_Uttinger = gtk.RadioMenuItem(group=self.submenuKeg, label='Uttinger 30L')
         self.setcustomweight = gtk.RadioMenuItem(group=self.submenuKeg, label=andergewicht)
         self.suboptionsLed = gtk.CheckMenuItem("Backlight LEDs")
         self.suboptionsNixie = gtk.CheckMenuItem("Nixies")
