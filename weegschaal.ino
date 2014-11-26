@@ -9,6 +9,10 @@ float weight;
 int k;
 int count=0;
 int countmax = 10;
+int computerdata = 0;
+int emptyweight = 0;
+int nixieson = 0;
+int ledson = 0;
 
 
 int latchPin = 8;
@@ -61,11 +65,11 @@ void loop() {
  
   weight = map(sensorOutput, sensorStart, sensorLoaded, weight1, weight2); // het gewicht*10
 
-  Serial.print("Gewicht is: "); 
-  Serial.print((float) weight/10); 
-  Serial.print("\t"); 
-  Serial.print("SensorValue: "); 
-  Serial.println(sensorAverage);
+  // Serial.print("Gewicht is: "); 
+  // Serial.print((float) weight/10); 
+  // Serial.print("\t"); 
+  // Serial.print("SensorValue: "); 
+  // Serial.println(sensorAverage);
   
  // MANUAL INPUT OF WEIGHT DATA OVER SERIAL
   // //The first input defines weight 1
@@ -86,7 +90,22 @@ void loop() {
 
 
 
-  int number = weight;
+
+
+
+
+
+Serial.println(weight);
+
+if (Serial.available() != 0){
+  computerdata = Serial.parseInt();
+  emptyweight = computerdata / 100;
+  nixieson = (computerdata - emptyweight) /10;
+  ledson = computerdata - emptyweight - nixieson;
+}
+
+if (nixieson == 1){
+  int number = weight - emptyweight;
     num0 = number/100; // vind het eerste getal
     num1 = number/10 - num0*10; // vind het 2e getal
     num2 = number - num0*100 - num1*10; // vind het 3e getal
@@ -94,16 +113,11 @@ void loop() {
     data0 = (byte) (byteArray[num2] | (byteArray[num1]<<4)); // 1e en 2e 4 bits
     data1 = (byte) (byteArray[num0] | (byteArray[num0]<<4)); // second shift register data
     digitalWrite(latchPin, 0); 
-
     shiftOut(dataPin, clockPin, data1); // stuur naar 2e shift register
     shiftOut(dataPin, clockPin, data0); // stuur naar 1e shift register
     digitalWrite(latchPin,1);
+  }
   
-
-    //SendtoShift(dataPin, clockPin, data1); // stuur naar 2e shift register
-    shiftOut(dataPin, clockPin, data0); // stuur naar 1e shift register
-    digitalWrite(latchPin,1);
-
    delay(1000);
 }
 
