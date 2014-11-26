@@ -1,5 +1,5 @@
-self.setcustomweight.set_active(True)
-5.0
+self.submenu30L_Uttinger.set_active(True)
+12
 self.suboptionsLed.set_active(False)
-self.suboptionsNixie.set_active(True)
-5.0
+self.suboptionsNixie.set_active(False)
+25.0
