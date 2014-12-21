@@ -1,5 +1,5 @@
-self.setcustomweight.set_active(True)
-26.0
+self.VulGewichtIn.set_active(True)
+15.0
 self.suboptionsLed.set_active(False)
 self.suboptionsNixie.set_active(True)
-26.0
+15
