@@ -4,31 +4,70 @@
 #serial port selector
 #weight calibration wizzard
 #clean up code
+import sys
 import pygtk
 pygtk.require('2.0')
 import gtk
-import serial # pip install pyserial
-ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
-port=ser.name
 have_appindicator = True
 try:
     import appindicator # apt-get install python-appindicator
 except:
     have_appindicator = False
 
+from multiprocessing import Process
+from serial import *        # pip install pyserial
+from threading import Thread
+
 PING_FREQUENCY = 1 # seconds
 stelgewicht = '-'
 andergewicht = 'Ander gewicht: {custweight}'.format(custweight = stelgewicht)
 gewicht = 0
 emptyweight = 0
+last_received = ''
+ser = Serial(
+port='/dev/ttyUSB0',
+baudrate=9600,
+bytesize=EIGHTBITS,
+parity=PARITY_NONE,
+stopbits=STOPBITS_ONE,
+timeout=0.1,
+xonxoff=0,
+rtscts=0,
+interCharTimeout=None
+) 
+
+
+def receiving(ser):
+    global last_received
+    global gewicht
+    print("reading")
+    buffer = ''
+    while True:
+        print("true")
+        buffer = buffer + ser.read(ser.inWaiting())
+        if '\n' in buffer:
+            lines = buffer.split('\n') # Guaranteed to have at least 2 entries
+            last_received = lines[-2]
+            #If the Arduino sends lots of empty lines, you'll lose the
+            #last filled line, so you could make the above statement conditional
+            #like so: if lines[-2]: last_received = lines[-2]
+            buffer = lines[-1]
+            if last_received != '\r' and last_received != '\n' and last_received != '':
+                print(last_received)
+                # gewicht = float(last_received)/10
+                # self.menuWeight.get_child().set_text('Het fust weegt {printWeight} Kg'.format(printWeight = gewicht + float(emptyweight)))
+                # bier = '{nrbier}L'.format(nrbier = gewicht)
+                # self.ind.set_label(bier)
+
+# Thread(target=receiving, args=(ser,)).start
+
 
 class MyIndicator:
 
     ## functions to handle events    
     def quit(self, widget, data=None):
-        gtk.main_quit()
-        ser.close()        
-        
+        sys.exit("Closed indicator")
+
     def VulGewichtIn(self):
         self.popup = gtk.Dialog(title='Gewicht')
         self.popup.entry = gtk.Entry()
@@ -62,8 +101,6 @@ class MyIndicator:
         self.readArduino()        
         
     def on_button_toggled(self, button, name, kg):
-       
-        
         if button.get_active():
             if name=="VulGewichtIn":
                 emptyweight = float(self.VulGewichtIn())
@@ -72,17 +109,7 @@ class MyIndicator:
                 self.writeArduino()
                 self.savefile(name)                                                        
 
-    def readArduino(self):
-        global gewicht
-        while True:
-            gewicht = ser.readline()
-            if gewicht:
-                print(gewicht)
-                self.menuWeight.get_child().set_text('Het fust weegt {printWeight} Kg'.format(printWeight = float(gewicht) + float(emptyweight)))
-                bier = '{nrbier}L'.format(nrbier = gewicht)
-                self.ind.set_label(bier)
-                gtk.timeout_add(PING_FREQUENCY * 1000, self.readArduino)
-        
+
 
     def writeArduino(self, *button):
         if self.suboptionsNixie.get_active():
@@ -187,13 +214,13 @@ class MyIndicator:
         self.menu.show_all()
         
         ## Add constructed menu as indicator menu
-        self.ind.set_menu(self.menu)   
-        self.readArduino() 
-    def main(self):
-        gtk.main()
+        self.ind.set_menu(self.menu)
+           
 
 if __name__ == "__main__":
+   Thread(target=receiving, args=(ser,)).start()
    bier = '{nrbier}L'.format(nrbier = gewicht)
    indicator = MyIndicator()
    indicator.ind.set_label(bier)
-   indicator.main()
+   gtk.main()
+   
