@@ -23,7 +23,6 @@ stelgewicht = '-'
 andergewicht = 'Ander gewicht: {custweight}'.format(custweight = stelgewicht)
 gewicht = 0
 emptyweight = 0
-last_received = ''
 ser = Serial(
 port='/dev/ttyUSB0',
 baudrate=9600,
@@ -35,32 +34,6 @@ xonxoff=0,
 rtscts=0,
 interCharTimeout=None
 ) 
-
-
-def receiving(ser):
-    global last_received
-    global gewicht
-    print("reading")
-    buffer = ''
-    while True:
-        print("true")
-        buffer = buffer + ser.read(ser.inWaiting())
-        if '\n' in buffer:
-            lines = buffer.split('\n') # Guaranteed to have at least 2 entries
-            last_received = lines[-2]
-            #If the Arduino sends lots of empty lines, you'll lose the
-            #last filled line, so you could make the above statement conditional
-            #like so: if lines[-2]: last_received = lines[-2]
-            buffer = lines[-1]
-            if last_received != '\r' and last_received != '\n' and last_received != '':
-                print(last_received)
-                # gewicht = float(last_received)/10
-                # self.menuWeight.get_child().set_text('Het fust weegt {printWeight} Kg'.format(printWeight = gewicht + float(emptyweight)))
-                # bier = '{nrbier}L'.format(nrbier = gewicht)
-                # self.ind.set_label(bier)
-
-# Thread(target=receiving, args=(ser,)).start
-
 
 class MyIndicator:
 
@@ -108,8 +81,26 @@ class MyIndicator:
                 emptyweight = kg
                 self.writeArduino()
                 self.savefile(name)                                                        
-
-
+    def receiving(self, ser):
+        global last_received
+        global gewicht
+        buffer = ''
+        while True:
+            counter = counter + 1
+            buffer = buffer + ser.read(ser.inWaiting())
+            if '\n' in buffer:
+                lines = buffer.split('\n') # Guaranteed to have at least 2 entries
+                last_received = lines[-2]
+                #If the Arduino sends lots of empty lines, you'll lose the
+                #last filled line, so you could make the above statement conditional
+                #like so: if lines[-2]: last_received = lines[-2]
+                buffer = lines[-1]
+                if last_received != '\r' and last_received != '\n' and last_received != '':
+                    print(last_received)
+                    gewicht = float(last_received)/10
+                    self.menuWeight.get_child().set_text('Het fust weegt {printWeight} Kg'.format(printWeight = gewicht + float(emptyweight)))
+                    bier = '{nrbier}L'.format(nrbier = gewicht)
+                    self.ind.set_label(bier)
 
     def writeArduino(self, *button):
         if self.suboptionsNixie.get_active():
@@ -215,12 +206,10 @@ class MyIndicator:
         
         ## Add constructed menu as indicator menu
         self.ind.set_menu(self.menu)
-           
+        gtk.timeout_add(1000, self.receiving, ser)
 
 if __name__ == "__main__":
-   Thread(target=receiving, args=(ser,)).start()
    bier = '{nrbier}L'.format(nrbier = gewicht)
    indicator = MyIndicator()
    indicator.ind.set_label(bier)
    gtk.main()
-   
