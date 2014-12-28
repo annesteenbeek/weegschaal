@@ -86,7 +86,6 @@ class MyIndicator:
         global gewicht
         buffer = ''
         while True:
-            counter = counter + 1
             buffer = buffer + ser.read(ser.inWaiting())
             if '\n' in buffer:
                 lines = buffer.split('\n') # Guaranteed to have at least 2 entries
