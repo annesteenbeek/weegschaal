@@ -17,6 +17,8 @@ except:
 from multiprocessing import Process
 from serial import *        # pip install pyserial
 from threading import Thread
+import time
+import Queue
 
 PING_FREQUENCY = 1 # seconds
 stelgewicht = '-'

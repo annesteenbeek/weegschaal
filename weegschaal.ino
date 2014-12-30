@@ -1,3 +1,5 @@
+#include <EEPROM.h> // for writing to the arduino memory;
+
 int sensorValue; //Value measured from sensor
 int sensorAverage = 0; // average sensor data
 int sensorStart; 
@@ -43,6 +45,9 @@ void setup() {
   byteArray[7] = 7; //0111
   byteArray[8] = 8; //1000
   byteArray[9] = 9; //1001
+  emptyweight = EEPROM.read(1);
+  
+
 
 }
 
@@ -86,30 +91,32 @@ void loop() {
 
 
 // toDo:
-// store empty weight in memory
 // calibratie data opslaan in geheugen
 // relais fixen zodat je power supply echt uit kunt zetten.
+// Timer zodat nixies niet hele dag aan staan.
+// Script voor op woonkamer computer
 
 
 
-
-Serial.println(weight);
+Serial.print(weight); Serial.print("\n");
 
 if (Serial.available() != 0){
   computerdata = Serial.parseInt();
-  emptyweight = computerdata / 100;
-  nixieson = (computerdata - emptyweight) /10;
-  ledson = computerdata - emptyweight - nixieson;
+  emptyweight = computerdata / 10;
+  nixieson = computerdata - emptyweight*10;
+  
+  EEPROM.write(1, emptyweight);
+  
 }
 
 if (nixieson == 1){
-  int number = weight - emptyweight*10;
+  int number = weight - emptyweight;
     num0 = number/100; // vind het eerste getal
     num1 = number/10 - num0*10; // vind het 2e getal
     num2 = number - num0*100 - num1*10; // vind het 3e getal
 
     data0 = (byte) (byteArray[num2] | (byteArray[num1]<<4)); // 1e en 2e 4 bits
-    data1 = (byte) (byteArray[num0] | (byteArray[num0]<<4)); // second shift register data
+    data1 = (byte) (byteArray[num0] | (byteArray[0]<<4)); // second shift register data
     digitalWrite(latchPin, 0); 
     shiftOut(dataPin, clockPin, data1); // stuur naar 2e shift register
     shiftOut(dataPin, clockPin, data0); // stuur naar 1e shift register
