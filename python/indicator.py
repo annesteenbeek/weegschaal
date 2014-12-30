@@ -20,6 +20,8 @@ from threading import Thread
 import time
 import Queue
 
+#branch test
+
 PING_FREQUENCY = 1 # seconds
 stelgewicht = '-'
 andergewicht = 'Ander gewicht: {custweight}'.format(custweight = stelgewicht)
