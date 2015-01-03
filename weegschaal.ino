@@ -101,7 +101,7 @@ void loop() {
 Serial.print(weight); Serial.print("\n");
 
 if (Serial.available() != 0){
-  computerdata = Serial.parseInt();
+  computerdata = Serial.parseFloat();
   emptyweight = computerdata / 10;
   nixieson = computerdata - emptyweight*10;
   

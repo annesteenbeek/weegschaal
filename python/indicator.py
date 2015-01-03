@@ -19,7 +19,7 @@ from serial import *        # pip install pyserial
 from threading import Thread
 import time
 import Queue
-
+import glib
 #branch test
 
 PING_FREQUENCY = 1 # seconds
@@ -33,7 +33,7 @@ baudrate=9600,
 bytesize=EIGHTBITS,
 parity=PARITY_NONE,
 stopbits=STOPBITS_ONE,
-timeout=0.1,
+timeout=None,
 xonxoff=0,
 rtscts=0,
 interCharTimeout=None
@@ -43,7 +43,7 @@ class MyIndicator:
 
     ## functions to handle events    
     def quit(self, widget, data=None):
-        sys.exit("Closed indicator")
+        gtk.main_quit()
 
     def VulGewichtIn(self):
         self.popup = gtk.Dialog(title='Gewicht')
@@ -63,7 +63,6 @@ class MyIndicator:
 
     def on_cancel_clicked(self, button):    
         self.popup.destroy()
-        self.readArduino() 
     
     def on_ok_clicked(self, button):
         global stelgewicht
@@ -75,7 +74,7 @@ class MyIndicator:
         self.popup.destroy()
         self.writeArduino()
         self.savefile("setcustomweight")
-        self.readArduino()        
+      
         
     def on_button_toggled(self, button, name, kg):
         if button.get_active():
@@ -89,6 +88,7 @@ class MyIndicator:
         global last_received
         global gewicht
         buffer = ''
+        ser.flushInput()
         while True:
             buffer = buffer + ser.read(ser.inWaiting())
             if '\n' in buffer:
@@ -104,6 +104,8 @@ class MyIndicator:
                     self.menuWeight.get_child().set_text('Het fust weegt {printWeight} Kg'.format(printWeight = gewicht + float(emptyweight)))
                     bier = '{nrbier}L'.format(nrbier = gewicht)
                     self.ind.set_label(bier)
+                    return True
+                    break
 
     def writeArduino(self, *button):
         if self.suboptionsNixie.get_active():
@@ -136,7 +138,7 @@ class MyIndicator:
         exec(lines[0].rstrip('\n')) #Togle saved beer button
         emptyweight = float(lines[1].rstrip('\n'))
         exec(lines[3]) #Toggle saved nixie status
-        stelgewicht = lines[4].rstrip('\n')
+        stelgewicht = lines[3].rstrip('\n')
         andergewicht = 'Ander gewicht: {custweight}'.format(custweight = stelgewicht)
         self.setcustomweight.get_child().set_text(andergewicht)
              
@@ -209,10 +211,12 @@ class MyIndicator:
         
         ## Add constructed menu as indicator menu
         self.ind.set_menu(self.menu)
-        gtk.timeout_add(1000, self.receiving, ser)
+        glib.timeout_add(1000, self.receiving, ser)
+
 
 if __name__ == "__main__":
    bier = '{nrbier}L'.format(nrbier = gewicht)
    indicator = MyIndicator()
    indicator.ind.set_label(bier)
    gtk.main()
+
