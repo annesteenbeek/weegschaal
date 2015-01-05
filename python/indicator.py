@@ -28,7 +28,7 @@ andergewicht = 'Ander gewicht: {custweight}'.format(custweight = stelgewicht)
 gewicht = 0
 emptyweight = 0
 ser = Serial(
-port='/dev/ttyUSB0',
+port='/dev/ttyUSB8',
 baudrate=9600,
 bytesize=EIGHTBITS,
 parity=PARITY_NONE,
@@ -65,25 +65,28 @@ class MyIndicator:
         self.popup.destroy()
     
     def on_ok_clicked(self, button):
-        global stelgewicht
         global emptyweight
-        stelgewicht = self.popup.entry.get_text()
+        global stelgewicht
+        stelgewicht = float(self.popup.entry.get_text())
         andergewicht = 'Ander gewicht: {custweight}'.format(custweight = stelgewicht)
-        emptyweight = float(stelgewicht)
         self.setcustomweight.get_child().set_text(andergewicht)
         self.popup.destroy()
+        emptyweight = stelgewicht
         self.writeArduino()
         self.savefile("setcustomweight")
       
         
     def on_button_toggled(self, button, name, kg):
+        global emptyweight
+
         if button.get_active():
             if name=="VulGewichtIn":
                 emptyweight = float(self.VulGewichtIn())
             else:    
                 emptyweight = kg
                 self.writeArduino()
-                self.savefile(name)                                                        
+                self.savefile(name)  
+
     def receiving(self, ser):
         global last_received
         global gewicht
@@ -99,7 +102,6 @@ class MyIndicator:
                 #like so: if lines[-2]: last_received = lines[-2]
                 buffer = lines[-1]
                 if last_received != '\r' and last_received != '\n' and last_received != '':
-                    print(last_received)
                     gewicht = float(last_received)/10
                     self.menuWeight.get_child().set_text('Het fust weegt {printWeight} Kg'.format(printWeight = gewicht + float(emptyweight)))
                     bier = '{nrbier}L'.format(nrbier = gewicht)
@@ -118,26 +120,25 @@ class MyIndicator:
 
     def savefile(self, name):
         global stelgewicht
-        savefile = open('.savefile','w')
-        savefile.write('self.{beerbutton}.set_active(True)'.format(beerbutton=name)+'\n')
-
-        savefile.write('{weightprint}'.format(weightprint=emptyweight)+'\n')
-        savefile.write('self.suboptionsNixie.set_active({nixieson})'.format(nixieson=self.suboptionsNixie.get_active())+'\n')
+        textfile = open('.savefile','w')
+        textfile.write('self.{beerbutton}.set_active(True)'.format(beerbutton=name)+'\n')
+        textfile.write('{weightprint}'.format(weightprint=emptyweight)+'\n')
+        textfile.write('self.suboptionsNixie.set_active({nixieson})'.format(nixieson=self.suboptionsNixie.get_active())+'\n')
         if name == "setcustomweight":
-            savefile.write('{weightprint}'.format(weightprint=emptyweight))
+            textfile.write('{weightprint}'.format(weightprint=emptyweight))
         else:
-            savefile.write('{weightprint}'.format(weightprint=stelgewicht))
-        savefile.close() # you can omit in most cases as the destructor will call if
+            textfile.write('{weightprint}'.format(weightprint=stelgewicht))
+        textfile.close() # you can omit in most cases as the destructor will call if
         
     def loadfile(self):
         global stelgewicht
         global emptyweight
-        savefile = open('.savefile', 'r')
-        lines=savefile.readlines()
-        savefile.close()
+        textfile = open('.savefile', 'r')
+        lines=textfile.readlines()
+        textfile.close()
         exec(lines[0].rstrip('\n')) #Togle saved beer button
         emptyweight = float(lines[1].rstrip('\n'))
-        exec(lines[3]) #Toggle saved nixie status
+        # exec(lines[2]) #Toggle saved nixie status
         stelgewicht = lines[3].rstrip('\n')
         andergewicht = 'Ander gewicht: {custweight}'.format(custweight = stelgewicht)
         self.setcustomweight.get_child().set_text(andergewicht)
@@ -217,6 +218,7 @@ class MyIndicator:
 if __name__ == "__main__":
    bier = '{nrbier}L'.format(nrbier = gewicht)
    indicator = MyIndicator()
+   # indicator.loadfile()
    indicator.ind.set_label(bier)
    gtk.main()
 

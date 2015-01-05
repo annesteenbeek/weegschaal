@@ -1,4 +1,4 @@
-self.setcustomweight.set_active(True)
-11.0
+self.submenuGrolsh.set_active(True)
+14.3
 self.suboptionsNixie.set_active(False)
-11.0
+25.0
