@@ -15,6 +15,7 @@ int computerdata = 0;
 int emptyweight = 0;
 int nixieson = 0;
 int ledson = 0;
+int gndpin = 9;
 
 
 int latchPin = 8;
@@ -55,6 +56,8 @@ void loop() {
  // read the input on analog pin 0:
   sensorValue = analogRead(A0);
   // analog voltage goes from 0 to 1023
+  
+  digitalWrite(gndpin,LOW);
 
   if (count != countmax){
     count++;
@@ -67,11 +70,14 @@ void loop() {
     }
     sensorAverage = 0;
   }
- 
-  weight = map(sensorOutput, sensorStart, sensorLoaded, weight1, weight2); // het gewicht*10
+  int sensorStart = 555;
+  int weight1 = 0;
+  int sensorLoaded = 755;
+  int weight2 = 650;
+  weight = map(sensorValue, sensorStart, sensorLoaded, weight1, weight2); // het gewicht*10
 
   // MANUAL INPUT OF WEIGHT DATA OVER SERIAL
-  // //The first input defines weight 1
+  //The first input defines weight 1
   // if (Serial.available() > 0 && k == 0) {
   //   weight1 = (float) Serial.parseInt();
   //   sensorStart=sensorAverage;
@@ -98,8 +104,8 @@ void loop() {
 
 
 
-Serial.print(weight); Serial.print("\n");
-
+Serial.print(abs(weight)); Serial.print("\n");
+// Serial.println(sensorValue);
 if (Serial.available() != 0){
   computerdata = Serial.parseFloat();
   emptyweight = computerdata / 10;
@@ -109,18 +115,20 @@ if (Serial.available() != 0){
   
 }
 
+int emptyweight= 0;
 if (nixieson == 1){
-  int number = weight - emptyweight;
+  int number = abs(weight) - emptyweight;
     num0 = number/100; // vind het eerste getal
     num1 = number/10 - num0*10; // vind het 2e getal
     num2 = number - num0*100 - num1*10; // vind het 3e getal
 
-    data0 = (byte) (byteArray[num2] | (byteArray[num1]<<4)); // 1e en 2e 4 bits
-    data1 = (byte) (byteArray[num0] | (byteArray[0]<<4)); // second shift register data
+    data0 = (byte) (byteArray[num1] | (byteArray[num2]<<4)); // 1e en 2e 4 bits
+    data1 = (byte) (byteArray[num0] | (byteArray[8]<<4)); // second shift register data
     digitalWrite(latchPin, 0); 
     shiftOut(dataPin, clockPin, data1); // stuur naar 2e shift register
     shiftOut(dataPin, clockPin, data0); // stuur naar 1e shift register
     digitalWrite(latchPin,1);
+
   }
   
    delay(1000);
