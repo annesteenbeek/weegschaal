@@ -1,5 +1,0 @@
-BOARD_TAG = Nano w/ ATmega328
-ARDUINO_PORT = /dev/ttyUSB0
-ARDUINO_LIBS = 
-ARDUINO_DIR = /usr/share/arduino
-
