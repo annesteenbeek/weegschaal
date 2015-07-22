@@ -15,15 +15,21 @@ int computerdata = 0;
 int emptyweight = 0;
 int nixieson = 0;
 int ledson = 0;
-
-//--- PINS ---//
-
-int gndpin = 9;
-int latchPin = 8;
-int clockPin = 12;
-int dataPin = 11;
-byte data0, data1;
 int byteArray[10];
 int num0, num1, num2;
-int number =0;
 int byte0, byte1;
+byte number;
+//--- PINS ---//
+int scalePin = 0;
+int redPin = 3;
+int greenPin= 5;
+int bluePin = 6;
+int nixieOne = 2;
+int nixieTwo = 4;
+int nixieThree = 7;
+int ledPin = 8;
+int Dpin = 9;
+int Cpin = 10;
+int Bpin = 11;
+int Apin = 12;
+int logicPin;
