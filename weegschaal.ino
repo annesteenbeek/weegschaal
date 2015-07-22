@@ -1,7 +1,6 @@
 #include <EEPROM.h> // for writing to the arduino memory;
 #include <config.h> 
 
-
 // the setup routine runs once when you press reset:
 void setup() {
   Serial.begin(9600);
@@ -58,26 +57,22 @@ if (Serial.available() != 0){
 }
 
 int emptyweight= 0;
-if (nixieson == 1){
-  int number = abs(weight) - emptyweight;
+  if (nixieson == 1){
+    int number = abs(weight) - emptyweight;
     num0 = number/100; // vind het eerste getal
+    setNumber(nixieOne, num0);
     num1 = number/10 - num0*10; // vind het 2e getal
+    setNumber(nixieTwo, num1);
     num2 = number - num0*100 - num1*10; // vind het 3e getal
-
-    data0 = (byte) (byteArray[num1] | (byteArray[num2]<<4)); // 1e en 2e 4 bits
-    data1 = (byte) (byteArray[num0] | (byteArray[8]<<4)); // second shift register data
-    digitalWrite(latchPin, 0); 
-    shiftOut(dataPin, clockPin, data1); // stuur naar 2e shift register
-    shiftOut(dataPin, clockPin, data0); // stuur naar 1e shift register
-    digitalWrite(latchPin,1);
-
+    setNumber(nixieThree, num2);
+  }else{
+    digitalWrite(nixieOne, LOW);
+    digitalWrite(nixieTwo, LOW);
+    digitalWrite(nixieThree, LOW);
   }
-  
-   delay(1000);
 }
 
 void setNumber(int nixie, int num) {
-  
   digitalWrite(nixieOne, LOW);
   digitalWrite(nixieTwo, LOW);
   digitalWrite(nixieThree, LOW);
@@ -103,5 +98,36 @@ void setNumber(int nixie, int num) {
       digitalWrite(logicPin, LOW);
     } 
   }
+  wait(100);
   digitalWrite(nixie, HIGH);
+  wait(1000);
+}
+
+unsigned int hexToDec(String hexString) {
+  unsigned int decValue = 0;
+  int nextInt;
+  for (int i = 0; i < hexString.length(); i++) {
+    nextInt = int(hexString.charAt(i));
+    if (nextInt >= 48 && nextInt <= 57) nextInt = map(nextInt, 48, 57, 0, 9);
+    if (nextInt >= 65 && nextInt <= 70) nextInt = map(nextInt, 65, 70, 10, 15);
+    if (nextInt >= 97 && nextInt <= 102) nextInt = map(nextInt, 97, 102, 10, 15);
+    nextInt = constrain(nextInt, 0, 15);
+    decValue = (decValue * 16) + nextInt;
+  }
+  return decValue;
+}
+
+void setRGB(String colValHex){
+  int redVal = hexToDec(colValHex.substring(0,1));
+  int greenVal = hexToDec(colValHex.substring(2,3));
+  int blueVal = hexToDec(colValHex.substring(4,6));
+  analogWrite(redPin, redVal);
+  analogWrite(greenPin, greenVal);
+  analogWrite(bluePin, blueVal);
+}
+
+void wait(int waitTime){
+  waitStart = micros();
+  while ((micros()-waitStart) < waitTime ){
+    }
 }
