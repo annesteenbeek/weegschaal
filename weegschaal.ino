@@ -25,30 +25,13 @@ void setup() {
 void loop() {
  // read the input on analog pin 0:
   sensorValue = analogRead(scalePin);
-  // analog voltage goes from 0 to 1023
-  
-  if (count != countmax){
-    count++;
-    sensorAverage=sensorAverage+sensorValue;
-  }
-  else{
-    count = 0;
-    if ( sensorAverage/countmax - (0.5*1023) > sensorOutput > sensorAverage/countmax + (0.5*1023) ){ // minimum difference to prevent constant small value changes
-    sensorOutput=sensorAverage/countmax;
-    }
-    sensorAverage = 0;
-  }
-  int sensorStart = 555;
-  int weight1 = 0;
-  int sensorLoaded = 755;
-  int weight2 = 650;
   weight = map(sensorValue, sensorStart, sensorLoaded, weight1, weight2); // het gewicht*10
 
 
 Serial.print(abs(weight)); Serial.print("\n");
 // Serial.println(sensorValue);
 if (Serial.available() != 0){
-  computerdata = Serial.parseFloat();
+  computerdata = Serial.readString();
   emptyweight = computerdata / 10;
   nixieson = computerdata - emptyweight*10;
   
@@ -56,7 +39,6 @@ if (Serial.available() != 0){
   
 }
 
-int emptyweight= 0;
   if (nixieson == 1){
     int number = abs(weight) - emptyweight;
     num0 = number/100; // vind het eerste getal
