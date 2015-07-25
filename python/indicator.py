@@ -14,11 +14,8 @@ try:
 except:
     have_appindicator = False
 
-from multiprocessing import Process
 from serial import *        # pip install pyserial
-from threading import Thread
 import time
-import Queue
 import glib
 # branch test
 
@@ -28,7 +25,7 @@ andergewicht = 'Ander gewicht: {custweight}'.format(custweight=stelgewicht)
 gewicht = 0
 emptyweight = 0
 ser = Serial(
-    port='/dev/ttyUSB9',
+    # port='/dev/ttyUSB9',
     baudrate=9600,
     bytesize=EIGHTBITS,
     parity=PARITY_NONE,
@@ -41,9 +38,7 @@ ser = Serial(
 
 
 class MyIndicator:
-
     # functions to handle events
-
     def quit(self, widget, data=None):
         gtk.main_quit()
 
@@ -153,7 +148,6 @@ class MyIndicator:
 
     # Initialise
     def __init__(self):
-
         # Create appindicator object
         if have_appindicator:
             self.ind = appindicator.Indicator("example-simple-client",
@@ -192,7 +186,9 @@ class MyIndicator:
             group=self.submenuKeg, label='Uttinger 30L')
         self.setcustomweight = gtk.RadioMenuItem(
             group=self.submenuKeg, label=andergewicht)
+
         self.suboptionsNixie = gtk.CheckMenuItem("Nixies")
+        self.suboptionsLeds = gtk.CheckMenuItem("LEDS")
 
         self.menu.append(self.menuWeight)
         self.menu.append(gtk.SeparatorMenuItem())
@@ -209,6 +205,7 @@ class MyIndicator:
         self.menubeer.append(self.setcustomweight)
 
         self.menuoptions.append(self.suboptionsNixie)
+        self.menuoptions.append(self.suboptionsLeds)
 
         menuItemQuit.connect('activate', self.quit, "quit")
 
@@ -228,6 +225,7 @@ class MyIndicator:
             "activate", self.on_button_toggled, "VulGewichtIn", 2)
 
         self.suboptionsNixie.connect("activate", self.writeArduino)
+        self.suboptionsLeds.connect("activate", self.writeArduino)
 
         # Show all in menu (instead of calling .show() for each item)
         self.menu.show_all()
@@ -237,7 +235,7 @@ class MyIndicator:
         glib.timeout_add(1000, self.receiving, ser)
 
 
-if __name__ == "__main__":
+if True:
     bier = '{nrbier}L'.format(nrbier=gewicht)
     indicator = MyIndicator()
     # indicator.loadfile()
