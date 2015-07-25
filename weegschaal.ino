@@ -80,9 +80,9 @@ void setNumber(int nixie, int num) {
       digitalWrite(logicPin, LOW);
     } 
   }
-  wait(100);
+  delayMicroseconds(100);
   digitalWrite(nixie, HIGH);
-  wait(1000);
+  delayMicroseconds(1000);
 }
 
 unsigned int hexToDec(String hexString) {
@@ -106,10 +106,4 @@ void setRGB(String colValHex){
   analogWrite(redPin, redVal);
   analogWrite(greenPin, greenVal);
   analogWrite(bluePin, blueVal);
-}
-
-void wait(int waitTime){
-  waitStart = micros();
-  while ((micros()-waitStart) < waitTime ){
-    }
 }
