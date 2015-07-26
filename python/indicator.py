@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 
-# todo:
-# serial port selector
-# weight calibration wizzard
-# clean up code
 import sys
 import pygtk
 pygtk.require('2.0')
@@ -14,30 +10,32 @@ try:
 except:
     have_appindicator = False
 
-from serial import *        # pip install pyserial
+from serial import *       # pip install pyserial
 import time
 import glib
-# branch test
+from serial.tools import list_ports
 
 PING_FREQUENCY = 1  # seconds
 stelgewicht = '-'
 andergewicht = 'Ander gewicht: {custweight}'.format(custweight=stelgewicht)
 gewicht = 0
 emptyweight = 0
-ser = Serial(
-    # port='/dev/ttyUSB9',
-    baudrate=9600,
-    bytesize=EIGHTBITS,
-    parity=PARITY_NONE,
-    stopbits=STOPBITS_ONE,
-    timeout=None,
-    xonxoff=0,
-    rtscts=0,
-    interCharTimeout=None
-)
+ports = list_ports.comports()
 
 
 class MyIndicator:
+    ser = Serial(
+        # port='/dev/ttyUSB9',
+        baudrate=9600,
+        bytesize=EIGHTBITS,
+        parity=PARITY_NONE,
+        stopbits=STOPBITS_ONE,
+        timeout=None,
+        xonxoff=0,
+        rtscts=0,
+        interCharTimeout=None
+    )
+
     # functions to handle events
     def quit(self, widget, data=None):
         gtk.main_quit()
@@ -146,6 +144,17 @@ class MyIndicator:
             custweight=stelgewicht)
         self.setcustomweight.get_child().set_text(andergewicht)
 
+    def createPortList(self, portName):
+        portName = portName[0]
+        if "ttyS10" in portName:
+            self.portName = gtk.RadioMenuItem(label=str(portName))
+            self.menuoptions.append(self.portName)
+            self.portName.connect("activate", self.setPort, portName)
+
+    def setPort(self, button, portName):
+        self.ser.port = portName
+        print("Set serial to port: ", portName)
+
     # Initialise
     def __init__(self):
         # Create appindicator object
@@ -227,12 +236,14 @@ class MyIndicator:
         self.suboptionsNixie.connect("activate", self.writeArduino)
         self.suboptionsLeds.connect("activate", self.writeArduino)
 
-        # Show all in menu (instead of calling .show() for each item)
+        # self.createPortList('ttyUSB0')
+        [self.createPortList(x) for x in ports]
+
         self.menu.show_all()
 
         # Add constructed menu as indicator menu
         self.ind.set_menu(self.menu)
-        glib.timeout_add(1000, self.receiving, ser)
+        # glib.timeout_add(1000, self.receiving, ser)
 
 
 if True:
