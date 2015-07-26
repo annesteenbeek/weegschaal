@@ -40,6 +40,27 @@ class MyIndicator:
     def quit(self, widget, data=None):
         gtk.main_quit()
 
+    def colorSelector(self, widget):
+            self.colorseldlg = gtk.ColorSelectionDialog(
+                "Select background color")
+
+            # Get the ColorSelection widget
+            colorsel = self.colorseldlg.colorsel
+
+            colorsel.set_previous_color(self.color)
+            colorsel.set_current_color(self.color)
+            colorsel.set_has_palette(True)
+
+            # Connect to the "color_changed" signal
+            # Show the dialog
+            response = self.colorseldlg.run()
+
+            if response -- gtk.RESPONSE_OK:
+                self.color = colorsel.get_current_color()
+            else:
+                self.drawingarea.modify_bg(gtk.STATE_NORMAL, self.color)
+            colorsel.connect("color_changed", self.writeArduino)
+
     def VulGewichtIn(self):
         self.popup = gtk.Dialog(title='Gewicht')
         self.popup.entry = gtk.Entry()
@@ -197,7 +218,8 @@ class MyIndicator:
             group=self.submenuKeg, label=andergewicht)
 
         self.suboptionsNixie = gtk.CheckMenuItem("Nixies")
-        self.suboptionsLeds = gtk.CheckMenuItem("LEDS")
+        self.suboptionsLeds = gtk.CheckMenuItem("LEDs")
+        self.suboptionsColor = gtk.MenuItem("Select LED color")
 
         self.menu.append(self.menuWeight)
         self.menu.append(gtk.SeparatorMenuItem())
@@ -215,6 +237,7 @@ class MyIndicator:
 
         self.menuoptions.append(self.suboptionsNixie)
         self.menuoptions.append(self.suboptionsLeds)
+        self.menuoptions.append(self.suboptionsColor)
 
         menuItemQuit.connect('activate', self.quit, "quit")
 
@@ -235,6 +258,8 @@ class MyIndicator:
 
         self.suboptionsNixie.connect("activate", self.writeArduino)
         self.suboptionsLeds.connect("activate", self.writeArduino)
+        self.color = gtk.gdk.Color('#FFFFFF')
+        self.suboptionsColor.connect("activate", self.colorSelector)
 
         # self.createPortList('ttyUSB0')
         [self.createPortList(x) for x in ports]
