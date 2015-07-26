@@ -91,15 +91,16 @@ class MyIndicator:
         self.writeArduino()
         self.savefile("setcustomweight")
 
-    def on_button_toggled(self, button, name, kg):
+    def kegSelect(self, button, name, kg):
 
         if button.get_active():
+            self.selectedKeg = name
             if name == "VulGewichtIn":
                 self.emptyweight = float(self.VulGewichtIn())
             else:
                 self.emptyweight = kg
                 self.writeArduino()
-                self.savefile(name)
+        self.savefile()
 
     def receiving(self, ser):
         global last_received
@@ -127,13 +128,8 @@ class MyIndicator:
     def writeArduino(self, *button):
         color = [gtk.gdk.Color.to_string(self.color)[i] for i in [1,2,5,6,9,10]]
         color = ''.join(color)
-        if self.suboptionsNixie.get_active():
-            nixies = 1
-        else:
-            nixies = 0
-        sendserial = float(self.emptyweight) * 100 + nixies
-        print(sendserial)
-        ser.write(str(sendserial))
+
+        # self.ser.write(str())
 
     def savefile(self):
         data = {
@@ -141,9 +137,9 @@ class MyIndicator:
         'ledcolor':self.color,
         'ledson':self.suboptionsLeds.get_active(),
         'nixieson':self.suboptionsNixie.get_active(),
-        'kegtype':self.kegtype,
         'usbport':self.ser.port
         }
+        # 'kegtype':self.selectedKeg,
 
         with open('.savefile.json', "w+") as outfile:
             json.dump(data, outfile)
@@ -156,8 +152,8 @@ class MyIndicator:
         self.color = gtk.gdk.Color(data["ledcolor"])
         self.suboptionsLeds.set_active(data["ledson"])
         self.suboptionsNixie.set_active(data["nixieson"])
-        self.kegtype = data["kegtype"]
         self.ser.port = data["usbport"]
+        selectedKeg = data["kegtype"]
 
         self.createPortList()
 
@@ -177,10 +173,13 @@ class MyIndicator:
         if self.ser.port not in self.ports:
             self.ser.port = self.ports[0]
 
-
     def setPort(self, button, portName):
         self.ser.port = portName
         print("Set serial to port: ", portName)
+
+    def createBeerList(self):
+
+        mystring.replace (" ", "_")
 
     # Initialise
     def __init__(self):
@@ -250,17 +249,17 @@ class MyIndicator:
         self.loadfile()
 
         self.submenuKeg.connect(
-            "toggled", self.on_button_toggled, "submenuKeg", 15)
+            "toggled", self.kegSelect, "submenuKeg", 15)
         self.submenuGrolsh.connect(
-            "toggled", self.on_button_toggled, "submenuGrolsh", 14.3)
+            "toggled", self.kegSelect, "submenuGrolsh", 14.3)
         self.submenuHeineken.connect(
-            "toggled", self.on_button_toggled, "submenuHeineken", 17)
+            "toggled", self.kegSelect, "submenuHeineken", 17)
         self.submenuUttinger.connect(
-            "toggled", self.on_button_toggled, "submenuUttinger", 19)
+            "toggled", self.kegSelect, "submenuUttinger", 19)
         self.submenu30L_Uttinger.connect(
-            "toggled", self.on_button_toggled, "submenu30L_Uttinger", 12)
+            "toggled", self.kegSelect, "submenu30L_Uttinger", 12)
         self.setcustomweight.connect(
-            "activate", self.on_button_toggled, "VulGewichtIn", 2)
+            "activate", self.kegSelect, "VulGewichtIn", 2)
 
         self.suboptionsNixie.connect("activate", self.writeArduino)
         self.suboptionsLeds.connect("activate", self.writeArduino)
