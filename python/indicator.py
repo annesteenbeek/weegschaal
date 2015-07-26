@@ -14,6 +14,8 @@ from serial import *       # pip install pyserial
 import time
 import glib
 from serial.tools import list_ports
+import json
+
 
 PING_FREQUENCY = 1  # seconds
 ports = list_ports.comports()
@@ -24,8 +26,8 @@ class MyIndicator:
     gewicht = 0
     emptyweight = 0
     andergewicht = 'Ander gewicht: {custweight}'.format(custweight=stelgewicht)
+    color = gtk.gdk.Color('#FFFFFF')
     ser = Serial(
-        # port='/dev/ttyUSB9',
         baudrate=9600,
         bytesize=EIGHTBITS,
         parity=PARITY_NONE,
@@ -124,6 +126,7 @@ class MyIndicator:
                     break
 
     def writeArduino(self, *button):
+
         if self.suboptionsNixie.get_active():
             nixies = 1
         else:
@@ -132,28 +135,29 @@ class MyIndicator:
         print(sendserial)
         ser.write(str(sendserial))
 
-    def savefile(self, name):
-        textfile = open('.savefile', 'w')
-        textfile.write(
-            'self.{beerbutton}.set_active(True)'.format(beerbutton=name) + '\n')
-        textfile.write('{weightprint}'.format(weightprint=self.emptyweight) + '\n')
-        textfile.write('self.suboptionsNixie.set_active({nixieson})'.format(
-            nixieson=self.suboptionsNixie.get_active()) + '\n')
-        if name == "setcustomweight":
-            textfile.write('{weightprint}'.format(weightprint=self.emptyweight))
-        else:
-            textfile.write('{weightprint}'.format(weightprint=self.stelgewicht))
-        # you can omit in most cases as the destructor will call if
-        textfile.close()
+    def savefile(self):
+        data = {
+        'emptyweight':self.emptyweight,
+        'ledcolor':self.color,
+        'ledson':self.suboptionsLeds.get_active(),
+        'nixieson':self.suboptionsNixie.get_active(),
+        'kegtype':self.kegtype
+        }
+
+        with open('.savefile.json', "w+") as outfile:
+            json.dump(data, outfile)
 
     def loadfile(self):
-        textfile = open('.savefile', 'r')
-        lines = textfile.readlines()
-        textfile.close()
-        exec(lines[0].rstrip('\n'))  # Togle saved beer button
-        self.emptyweight = float(lines[1].rstrip('\n'))
-        # exec(lines[2]) #Toggle saved nixie status
-        self.selfstelgewicht = lines[3].rstrip('\n')
+        with open('.savefile.json', "r") as infile:
+            data = json.load(infile)
+
+        self.emptyweight = data["emptyweight"]
+        self.color = data["ledcolor"]
+        self.suboptionsLeds.set_active(data["ledson"])
+        self.suboptionsNixie.set_active(data["nixieson"])
+        self.kegtype = data["kegtype"]
+
+
         andergewicht = 'Ander gewicht: {custweight}'.format(
             custweight=self.stelgewicht)
         self.setcustomweight.get_child().set_text(andergewicht)
@@ -251,7 +255,6 @@ class MyIndicator:
 
         self.suboptionsNixie.connect("activate", self.writeArduino)
         self.suboptionsLeds.connect("activate", self.writeArduino)
-        self.color = gtk.gdk.Color('#FFFFFF')
         self.suboptionsColor.connect("activate", self.colorSelector)
 
         # self.createPortList('ttyUSB0')
