@@ -16,14 +16,14 @@ import glib
 from serial.tools import list_ports
 
 PING_FREQUENCY = 1  # seconds
-stelgewicht = '-'
-andergewicht = 'Ander gewicht: {custweight}'.format(custweight=stelgewicht)
-gewicht = 0
-emptyweight = 0
 ports = list_ports.comports()
 
 
 class MyIndicator:
+    stelgewicht = '-'
+    gewicht = 0
+    emptyweight = 0
+    andergewicht = 'Ander gewicht: {custweight}'.format(custweight=stelgewicht)
     ser = Serial(
         # port='/dev/ttyUSB9',
         baudrate=9600,
@@ -81,31 +81,27 @@ class MyIndicator:
         self.popup.destroy()
 
     def on_ok_clicked(self, button):
-        global emptyweight
-        global stelgewicht
-        stelgewicht = float(self.popup.entry.get_text())
+        self.stelgewicht = float(self.popup.entry.get_text())
         andergewicht = 'Ander gewicht: {custweight}'.format(
-            custweight=stelgewicht)
+            custweight=self.stelgewicht)
         self.setcustomweight.get_child().set_text(andergewicht)
         self.popup.destroy()
-        emptyweight = stelgewicht
+        self.emptyweight = self.stelgewicht
         self.writeArduino()
         self.savefile("setcustomweight")
 
     def on_button_toggled(self, button, name, kg):
-        global emptyweight
 
         if button.get_active():
             if name == "VulGewichtIn":
-                emptyweight = float(self.VulGewichtIn())
+                self.emptyweight = float(self.VulGewichtIn())
             else:
-                emptyweight = kg
+                self.emptyweight = kg
                 self.writeArduino()
                 self.savefile(name)
 
     def receiving(self, ser):
         global last_received
-        global gewicht
         buffer = ''
         ser.flushInput()
         while True:
@@ -119,10 +115,10 @@ class MyIndicator:
                 # like so: if lines[-2]: last_received = lines[-2]
                 buffer = lines[-1]
                 if last_received != '\r' and last_received != '\n' and last_received != '':
-                    gewicht = float(last_received) / 10
+                    self.gewicht = float(last_received) / 10
                     self.menuWeight.get_child().set_text('Het fust weegt {printWeight} Kg'.format(
-                        printWeight=gewicht + float(emptyweight)))
-                    bier = '{nrbier}L'.format(nrbier=gewicht)
+                        printWeight=self.gewicht + float(self.emptyweight)))
+                    bier = '{nrbier}L'.format(nrbier=self.gewicht)
                     self.ind.set_label(bier)
                     return True
                     break
@@ -132,37 +128,34 @@ class MyIndicator:
             nixies = 1
         else:
             nixies = 0
-        sendserial = float(emptyweight) * 100 + nixies
+        sendserial = float(self.emptyweight) * 100 + nixies
         print(sendserial)
         ser.write(str(sendserial))
 
     def savefile(self, name):
-        global stelgewicht
         textfile = open('.savefile', 'w')
         textfile.write(
             'self.{beerbutton}.set_active(True)'.format(beerbutton=name) + '\n')
-        textfile.write('{weightprint}'.format(weightprint=emptyweight) + '\n')
+        textfile.write('{weightprint}'.format(weightprint=self.emptyweight) + '\n')
         textfile.write('self.suboptionsNixie.set_active({nixieson})'.format(
             nixieson=self.suboptionsNixie.get_active()) + '\n')
         if name == "setcustomweight":
-            textfile.write('{weightprint}'.format(weightprint=emptyweight))
+            textfile.write('{weightprint}'.format(weightprint=self.emptyweight))
         else:
-            textfile.write('{weightprint}'.format(weightprint=stelgewicht))
+            textfile.write('{weightprint}'.format(weightprint=self.stelgewicht))
         # you can omit in most cases as the destructor will call if
         textfile.close()
 
     def loadfile(self):
-        global stelgewicht
-        global emptyweight
         textfile = open('.savefile', 'r')
         lines = textfile.readlines()
         textfile.close()
         exec(lines[0].rstrip('\n'))  # Togle saved beer button
-        emptyweight = float(lines[1].rstrip('\n'))
+        self.emptyweight = float(lines[1].rstrip('\n'))
         # exec(lines[2]) #Toggle saved nixie status
-        stelgewicht = lines[3].rstrip('\n')
+        self.selfstelgewicht = lines[3].rstrip('\n')
         andergewicht = 'Ander gewicht: {custweight}'.format(
-            custweight=stelgewicht)
+            custweight=self.stelgewicht)
         self.setcustomweight.get_child().set_text(andergewicht)
 
     def createPortList(self, portName):
@@ -192,7 +185,7 @@ class MyIndicator:
         # Create menu object
         self.menu = gtk.Menu()  # create the main menu item
         self.menuWeight = gtk.MenuItem(
-            'Het fust weegt {printWeight} Kg'.format(printWeight=gewicht + emptyweight))
+            'Het fust weegt {printWeight} Kg'.format(printWeight=self.gewicht + self.emptyweight))
         self.menuWeight.set_sensitive(False)
         menuItemBeer = gtk.MenuItem('Beer')
         menuItemOptions = gtk.MenuItem('Options')
@@ -215,7 +208,7 @@ class MyIndicator:
         self.submenu30L_Uttinger = gtk.RadioMenuItem(
             group=self.submenuKeg, label='Uttinger 30L')
         self.setcustomweight = gtk.RadioMenuItem(
-            group=self.submenuKeg, label=andergewicht)
+            group=self.submenuKeg, label=self.andergewicht)
 
         self.suboptionsNixie = gtk.CheckMenuItem("Nixies")
         self.suboptionsLeds = gtk.CheckMenuItem("LEDs")
@@ -272,7 +265,7 @@ class MyIndicator:
 
 
 if True:
-    bier = '{nrbier}L'.format(nrbier=gewicht)
+    bier = '{nrbier}L'.format(nrbier=MyIndicator.gewicht)
     indicator = MyIndicator()
     # indicator.loadfile()
     indicator.ind.set_label(bier)
