@@ -16,12 +16,11 @@ import glib
 from serial.tools import list_ports
 import json
 
-
 PING_FREQUENCY = 1  # seconds
-ports = list_ports.comports()
 
 
 class MyIndicator:
+    ports=[]
     stelgewicht = '-'
     gewicht = 0
     emptyweight = 0
@@ -126,7 +125,8 @@ class MyIndicator:
                     break
 
     def writeArduino(self, *button):
-
+        color = [gtk.gdk.Color.to_string(self.color)[i] for i in [1,2,5,6,9,10]]
+        color = ''.join(color)
         if self.suboptionsNixie.get_active():
             nixies = 1
         else:
@@ -141,7 +141,8 @@ class MyIndicator:
         'ledcolor':self.color,
         'ledson':self.suboptionsLeds.get_active(),
         'nixieson':self.suboptionsNixie.get_active(),
-        'kegtype':self.kegtype
+        'kegtype':self.kegtype,
+        'usbport':self.ser.port
         }
 
         with open('.savefile.json', "w+") as outfile:
@@ -152,22 +153,30 @@ class MyIndicator:
             data = json.load(infile)
 
         self.emptyweight = data["emptyweight"]
-        self.color = data["ledcolor"]
+        self.color = gtk.gdk.Color(data["ledcolor"])
         self.suboptionsLeds.set_active(data["ledson"])
         self.suboptionsNixie.set_active(data["nixieson"])
         self.kegtype = data["kegtype"]
+        self.ser.port = data["usbport"]
 
+        self.createPortList()
 
-        andergewicht = 'Ander gewicht: {custweight}'.format(
+        self.andergewicht = 'Ander gewicht: {custweight}'.format(
             custweight=self.stelgewicht)
-        self.setcustomweight.get_child().set_text(andergewicht)
+        self.setcustomweight.get_child().set_text(self.andergewicht)
 
-    def createPortList(self, portName):
-        portName = portName[0]
-        if "ttyS10" in portName:
-            self.portName = gtk.RadioMenuItem(label=str(portName))
-            self.menuoptions.append(self.portName)
-            self.portName.connect("activate", self.setPort, portName)
+    def createPortList(self):
+        self.ports = []
+        for x in list_ports.comports():
+            if "ttyS10" in x:
+                portName = x[0]
+                self.ports.append(portName)
+                self.portName = gtk.RadioMenuItem(label=str(portName))
+                self.menuoptions.append(self.portName)
+                self.portName.connect("activate", self.setPort, portName)
+        if self.ser.port not in self.ports:
+            self.ser.port = self.ports[0]
+
 
     def setPort(self, button, portName):
         self.ser.port = portName
@@ -257,8 +266,7 @@ class MyIndicator:
         self.suboptionsLeds.connect("activate", self.writeArduino)
         self.suboptionsColor.connect("activate", self.colorSelector)
 
-        # self.createPortList('ttyUSB0')
-        [self.createPortList(x) for x in ports]
+        self.createPortList()
 
         self.menu.show_all()
 
