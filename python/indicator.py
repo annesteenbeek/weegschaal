@@ -62,7 +62,7 @@ class MyIndicator:
     def kegSelect(self, button, name, kg):
         if button.get_active():
             print(kg)
-            self.selectedKeg = name.replace(" ", "_")
+            self.selectedKeg = name
             self.emptyweight = kg
             self.writeArduino()
 
@@ -94,13 +94,14 @@ class MyIndicator:
         color = ''.join(color)
 
         # self.ser.write(str())
+        self.savefile()
 
     def savefile(self):
-        data = {"ledcolor": self.color,
+        data = {"ledcolor": gtk.gdk.Color.to_string(self.color),
                 "ledson": self.suboptionsLeds.get_active(),
                 "nixieson": self.suboptionsNixie.get_active(),
+                "kegtype": self.selectedKeg,
                 "usbport": self.ser.port}
-        # 'kegtype':self.selectedKeg,
 
         with open('.savefile.json', "w+") as outfile:
             json.dump(data, outfile)
@@ -113,19 +114,12 @@ class MyIndicator:
         self.suboptionsLeds.set_active(data["ledson"])
         self.suboptionsNixie.set_active(data["nixieson"])
         self.ser.port = data["usbport"]
-        self.selectedKeg = str(data["kegtype"])
+        self.selectedKeg = data["kegtype"]
 
+        self.beerdict[self.selectedKeg].activate()
         self.createPortList()
 
     def createPortList(self):
-        # for x in self.ports:
-        #     print(x)
-        #     self.menuoptions.remove(self.x)
-        # try:
-        #     self.menuoptions.remove(self.nousb)
-        # except:
-        #     print('No item found')
-
         self.ports = []
         for x in list_ports.comports():
             if "ttyS10" in x:
@@ -146,23 +140,22 @@ class MyIndicator:
         print("Set serial to port: ", portName)
 
     def createBeerList(self):
+        self.beerdict = {}
         with open('fustlijst.json', "r") as infile:
             self.beerlist = json.load(infile)
 
             beer = self.beerlist.keys()[0]
-            beertag = beer.replace(" ", "_")
             weight = self.beerlist[beer]
-            self.beertag = gtk.RadioMenuItem(label=beer)
-            self.menubeer.append(self.beertag)
-            self.beertag.connect("activate", self.kegSelect, beer, weight)
-            groupname = self.beertag
+            self.beerdict[beer] = gtk.RadioMenuItem(label=beer)
+            self.menubeer.append(self.beerdict[beer])
+            self.beerdict[beer].connect("activate", self.kegSelect, beer, weight)
+            groupname = self.beerdict[beer]
 
         for beer in self.beerlist.keys()[1:]:
             weight = self.beerlist[beer]
-            beertag = beer.replace(" ", "_")
-            self.beertag = gtk.RadioMenuItem(group=groupname, label=beer)
-            self.menubeer.append(self.beertag)
-            self.beertag.connect("activate", self.kegSelect, beer, weight)
+            self.beerdict[beer] = gtk.RadioMenuItem(group=groupname, label=beer)
+            self.menubeer.append(self.beerdict[beer])
+            self.beerdict[beer].connect("activate", self.kegSelect, beer, weight)
         self.menubeer.append(gtk.SeparatorMenuItem())
 
     # Initialise
