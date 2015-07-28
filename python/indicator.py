@@ -9,7 +9,6 @@ try:
     import appindicator  # apt-get install python-appindicator
 except:
     have_appindicator = False
-
 from serial import *       # pip install pyserial
 import time
 import glib
@@ -20,11 +19,9 @@ PING_FREQUENCY = 1  # seconds
 
 
 class MyIndicator:
-    ports=[]
-    stelgewicht = '-'
+    ports = []
     gewicht = 0
     emptyweight = 0
-    andergewicht = 'Ander gewicht: {custweight}'.format(custweight=stelgewicht)
     color = gtk.gdk.Color('#FFFFFF')
     ser = Serial(
         baudrate=9600,
@@ -62,45 +59,12 @@ class MyIndicator:
                 self.drawingarea.modify_bg(gtk.STATE_NORMAL, self.color)
             colorsel.connect("color_changed", self.writeArduino)
 
-    def VulGewichtIn(self):
-        self.popup = gtk.Dialog(title='Gewicht')
-        self.popup.entry = gtk.Entry()
-        self.popup.entry.set_text(
-            '{custweight}'.format(custweight=stelgewicht))
-        self.popup.vbox.pack_start(self.popup.entry, True, True, 0)
-
-        self.popup.cancel = gtk.Button("Cancel")
-        self.popup.cancel.connect("clicked", self.on_cancel_clicked)
-        self.popup.vbox.pack_start(self.popup.cancel, True, True, 0)
-
-        self.popup.ok = gtk.Button("Ok")
-        self.popup.ok.connect("clicked", self.on_ok_clicked)
-        self.popup.vbox.pack_start(self.popup.ok, True, True, 0)
-        self.popup.show_all()
-
-    def on_cancel_clicked(self, button):
-        self.popup.destroy()
-
-    def on_ok_clicked(self, button):
-        self.stelgewicht = float(self.popup.entry.get_text())
-        andergewicht = 'Ander gewicht: {custweight}'.format(
-            custweight=self.stelgewicht)
-        self.setcustomweight.get_child().set_text(andergewicht)
-        self.popup.destroy()
-        self.emptyweight = self.stelgewicht
-        self.writeArduino()
-        self.savefile("setcustomweight")
-
     def kegSelect(self, button, name, kg):
-
         if button.get_active():
-            self.selectedKeg = name
-            if name == "VulGewichtIn":
-                self.emptyweight = float(self.VulGewichtIn())
-            else:
-                self.emptyweight = kg
-                self.writeArduino()
-        self.savefile()
+            print(kg)
+            self.selectedKeg = name.replace(" ", "_")
+            self.emptyweight = kg
+            self.writeArduino()
 
     def receiving(self, ser):
         global last_received
@@ -126,19 +90,16 @@ class MyIndicator:
                     break
 
     def writeArduino(self, *button):
-        color = [gtk.gdk.Color.to_string(self.color)[i] for i in [1,2,5,6,9,10]]
+        color = [gtk.gdk.Color.to_string(self.color)[i] for i in [1, 2, 5, 6, 9, 10]]
         color = ''.join(color)
 
         # self.ser.write(str())
 
     def savefile(self):
-        data = {
-        'emptyweight':self.emptyweight,
-        'ledcolor':self.color,
-        'ledson':self.suboptionsLeds.get_active(),
-        'nixieson':self.suboptionsNixie.get_active(),
-        'usbport':self.ser.port
-        }
+        data = {"ledcolor": self.color,
+                "ledson": self.suboptionsLeds.get_active(),
+                "nixieson": self.suboptionsNixie.get_active(),
+                "usbport": self.ser.port}
         # 'kegtype':self.selectedKeg,
 
         with open('.savefile.json', "w+") as outfile:
@@ -148,20 +109,23 @@ class MyIndicator:
         with open('.savefile.json', "r") as infile:
             data = json.load(infile)
 
-        self.emptyweight = data["emptyweight"]
         self.color = gtk.gdk.Color(data["ledcolor"])
         self.suboptionsLeds.set_active(data["ledson"])
         self.suboptionsNixie.set_active(data["nixieson"])
         self.ser.port = data["usbport"]
-        selectedKeg = data["kegtype"]
+        self.selectedKeg = str(data["kegtype"])
 
         self.createPortList()
 
-        self.andergewicht = 'Ander gewicht: {custweight}'.format(
-            custweight=self.stelgewicht)
-        self.setcustomweight.get_child().set_text(self.andergewicht)
-
     def createPortList(self):
+        # for x in self.ports:
+        #     print(x)
+        #     self.menuoptions.remove(self.x)
+        # try:
+        #     self.menuoptions.remove(self.nousb)
+        # except:
+        #     print('No item found')
+
         self.ports = []
         for x in list_ports.comports():
             if "ttyS10" in x:
@@ -170,16 +134,36 @@ class MyIndicator:
                 self.portName = gtk.RadioMenuItem(label=str(portName))
                 self.menuoptions.append(self.portName)
                 self.portName.connect("activate", self.setPort, portName)
-        if self.ser.port not in self.ports:
-            self.ser.port = self.ports[0]
+                if self.ser.port not in self.ports:
+                    self.ser.port = self.ports[0]
+        if len(self.ports) == 0:
+            self.nousb = gtk.MenuItem('Geen usb gevonden')
+            self.menuoptions.append(self.nousb)
+            self.nousb.set_sensitive(False)
 
     def setPort(self, button, portName):
         self.ser.port = portName
         print("Set serial to port: ", portName)
 
     def createBeerList(self):
+        with open('fustlijst.json', "r") as infile:
+            self.beerlist = json.load(infile)
 
-        mystring.replace (" ", "_")
+            beer = self.beerlist.keys()[0]
+            beertag = beer.replace(" ", "_")
+            weight = self.beerlist[beer]
+            self.beertag = gtk.RadioMenuItem(label=beer)
+            self.menubeer.append(self.beertag)
+            self.beertag.connect("activate", self.kegSelect, beer, weight)
+            groupname = self.beertag
+
+        for beer in self.beerlist.keys()[1:]:
+            weight = self.beerlist[beer]
+            beertag = beer.replace(" ", "_")
+            self.beertag = gtk.RadioMenuItem(group=groupname, label=beer)
+            self.menubeer.append(self.beertag)
+            self.beertag.connect("activate", self.kegSelect, beer, weight)
+        self.menubeer.append(gtk.SeparatorMenuItem())
 
     # Initialise
     def __init__(self):
@@ -197,7 +181,9 @@ class MyIndicator:
         # Create menu object
         self.menu = gtk.Menu()  # create the main menu item
         self.menuWeight = gtk.MenuItem(
-            'Het fust weegt {printWeight} Kg'.format(printWeight=self.gewicht + self.emptyweight))
+            'Het fust weegt {printWeight} Kg'.
+            format(printWeight=self.gewicht + self.emptyweight))
+
         self.menuWeight.set_sensitive(False)
         menuItemBeer = gtk.MenuItem('Beer')
         menuItemOptions = gtk.MenuItem('Options')
@@ -210,18 +196,6 @@ class MyIndicator:
         # make the menuoptions a submenu of itemoptions
         menuItemOptions.set_submenu(self.menuoptions)
 
-        self.submenuKeg = gtk.RadioMenuItem(label='Keg')
-        self.submenuGrolsh = gtk.RadioMenuItem(
-            group=self.submenuKeg, label='Grolsh')
-        self.submenuHeineken = gtk.RadioMenuItem(
-            group=self.submenuKeg, label='Heineken')
-        self.submenuUttinger = gtk.RadioMenuItem(
-            group=self.submenuKeg, label='Uttinger')
-        self.submenu30L_Uttinger = gtk.RadioMenuItem(
-            group=self.submenuKeg, label='Uttinger 30L')
-        self.setcustomweight = gtk.RadioMenuItem(
-            group=self.submenuKeg, label=self.andergewicht)
-
         self.suboptionsNixie = gtk.CheckMenuItem("Nixies")
         self.suboptionsLeds = gtk.CheckMenuItem("LEDs")
         self.suboptionsColor = gtk.MenuItem("Select LED color")
@@ -232,40 +206,19 @@ class MyIndicator:
         self.menu.append(menuItemOptions)
         self.menu.append(menuItemQuit)
 
-        self.menubeer.append(self.submenuKeg)  # append to the submenu menubeer
-        self.menubeer.append(self.submenuGrolsh)
-        self.menubeer.append(self.submenuHeineken)
-        self.menubeer.append(self.submenuUttinger)
-        self.menubeer.append(self.submenu30L_Uttinger)
-        self.menubeer.append(gtk.SeparatorMenuItem())
-        self.menubeer.append(self.setcustomweight)
-
         self.menuoptions.append(self.suboptionsNixie)
         self.menuoptions.append(self.suboptionsLeds)
         self.menuoptions.append(self.suboptionsColor)
 
         menuItemQuit.connect('activate', self.quit, "quit")
 
-        self.loadfile()
-
-        self.submenuKeg.connect(
-            "toggled", self.kegSelect, "submenuKeg", 15)
-        self.submenuGrolsh.connect(
-            "toggled", self.kegSelect, "submenuGrolsh", 14.3)
-        self.submenuHeineken.connect(
-            "toggled", self.kegSelect, "submenuHeineken", 17)
-        self.submenuUttinger.connect(
-            "toggled", self.kegSelect, "submenuUttinger", 19)
-        self.submenu30L_Uttinger.connect(
-            "toggled", self.kegSelect, "submenu30L_Uttinger", 12)
-        self.setcustomweight.connect(
-            "activate", self.kegSelect, "VulGewichtIn", 2)
-
         self.suboptionsNixie.connect("activate", self.writeArduino)
         self.suboptionsLeds.connect("activate", self.writeArduino)
         self.suboptionsColor.connect("activate", self.colorSelector)
 
+        self.createBeerList()
         self.createPortList()
+        self.loadfile()
 
         self.menu.show_all()
 
