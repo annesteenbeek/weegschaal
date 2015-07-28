@@ -24,6 +24,8 @@ class MyIndicator:
     emptyweight = 0
     color = gtk.gdk.Color('#FFFFFF')
     selectedKeg = ""
+    portdict = {}
+
     ser = Serial(
         baudrate=9600,
         bytesize=EIGHTBITS,
@@ -120,20 +122,24 @@ class MyIndicator:
         self.createPortList()
 
     def createPortList(self):
+        for portname in self.portdict.keys():
+            self.menuoptions.remove(self.portdict[portname])
+        self.portdict = {}
+
         self.ports = []
         for x in list_ports.comports():
-            if "ttyS10" in x:
-                portName = x[0]
+            portName = x[0]
+            if '/dev/ttyUSB0' in portName:
                 self.ports.append(portName)
-                self.portName = gtk.RadioMenuItem(label=str(portName))
-                self.menuoptions.append(self.portName)
-                self.portName.connect("activate", self.setPort, portName)
+                self.portdict[portName] = gtk.RadioMenuItem(label=str(portName))
+                self.menuoptions.append(self.portdict[portName])
+                self.portdict[portName].connect("activate", self.setPort, portName)
                 if self.ser.port not in self.ports:
                     self.ser.port = self.ports[0]
         if len(self.ports) == 0:
-            self.nousb = gtk.MenuItem('Geen usb gevonden')
-            self.menuoptions.append(self.nousb)
-            self.nousb.set_sensitive(False)
+            self.portdict["nousb"] = gtk.MenuItem('Geen usb gevonden')
+            self.menuoptions.append(self.portdict["nousb"])
+            self.portdict["nousb"].set_sensitive(False)
 
     def setPort(self, button, portName):
         self.ser.port = portName
