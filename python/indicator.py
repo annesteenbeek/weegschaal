@@ -23,6 +23,7 @@ class MyIndicator:
     gewicht = 0
     emptyweight = 0
     color = gtk.gdk.Color('#FFFFFF')
+    selectedKeg = ""
     ser = Serial(
         baudrate=9600,
         bytesize=EIGHTBITS,
@@ -93,7 +94,6 @@ class MyIndicator:
         color = [gtk.gdk.Color.to_string(self.color)[i] for i in [1, 2, 5, 6, 9, 10]]
         color = ''.join(color)
 
-        # self.ser.write(str())
         self.savefile()
 
     def savefile(self):
