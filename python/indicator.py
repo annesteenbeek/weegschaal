@@ -23,7 +23,7 @@ class MyIndicator:
     gewicht = 0
     emptyweight = 0
     color = gtk.gdk.Color('#FFFFFF')
-    selectedKeg = ""
+    selectedKeg = "grolsch"
     portdict = {}
 
     ser = Serial(
@@ -42,8 +42,15 @@ class MyIndicator:
         gtk.main_quit()
 
     def colorSelector(self, widget):
-            self.colorseldlg = gtk.ColorSelectionDialog(
-                "Select background color")
+        handled = False
+        # Check if we've received a button pressed event
+        if True:
+            handled = True
+
+            # Create color selection dialog
+            if self.colorseldlg == None:
+                self.colorseldlg = gtk.ColorSelectionDialog(
+                    "Select background color")
 
             # Get the ColorSelection widget
             colorsel = self.colorseldlg.colorsel
@@ -53,6 +60,8 @@ class MyIndicator:
             colorsel.set_has_palette(True)
 
             # Connect to the "color_changed" signal
+            self.color = self.colorseldlg.colorsel.get_current_color()
+            colorsel.connect("color_changed", self.writeArduino)
             # Show the dialog
             response = self.colorseldlg.run()
 
@@ -60,11 +69,13 @@ class MyIndicator:
                 self.color = colorsel.get_current_color()
             else:
                 self.drawingarea.modify_bg(gtk.STATE_NORMAL, self.color)
-            colorsel.connect("color_changed", self.writeArduino)
+
+            self.colorseldlg.hide()
+
+        return handled
 
     def kegSelect(self, button, name, kg):
         if button.get_active():
-            print(kg)
             self.selectedKeg = name
             self.emptyweight = kg
             self.writeArduino()
@@ -93,9 +104,14 @@ class MyIndicator:
                     break
 
     def writeArduino(self, *button):
-        color = [gtk.gdk.Color.to_string(self.color)[i] for i in [1, 2, 5, 6, 9, 10]]
-        color = ''.join(color)
-
+        if bool(self.ser.port):
+            if self.colorseldlg != None:
+                self.color = self.colorseldlg.colorsel.get_current_color()
+            color = [gtk.gdk.Color.to_string(self.color)[i] for i in [1, 2, 5, 6, 9, 10]]
+            color = ''.join(color)
+            # print(gtk.gdk.Color.to_string(color))
+            print(color)
+            self.ser.write(color)
         self.savefile()
 
     def savefile(self):
@@ -119,7 +135,7 @@ class MyIndicator:
         self.selectedKeg = data["kegtype"]
 
         self.beerdict[self.selectedKeg].activate()
-        self.createPortList()
+        # self.createPortList()
 
     def createPortList(self):
         for portname in self.portdict.keys():
@@ -129,13 +145,14 @@ class MyIndicator:
         self.ports = []
         for x in list_ports.comports():
             portName = x[0]
-            if '/dev/ttyUSB0' in portName:
+            if 'USB' in portName:
                 self.ports.append(portName)
                 self.portdict[portName] = gtk.RadioMenuItem(label=str(portName))
                 self.menuoptions.append(self.portdict[portName])
                 self.portdict[portName].connect("activate", self.setPort, portName)
                 if self.ser.port not in self.ports:
                     self.ser.port = self.ports[0]
+                    self.portdict[self.ser.port].activate()
         if len(self.ports) == 0:
             self.portdict["nousb"] = gtk.MenuItem('Geen usb gevonden')
             self.menuoptions.append(self.portdict["nousb"])
@@ -143,6 +160,7 @@ class MyIndicator:
 
     def setPort(self, button, portName):
         self.ser.port = portName
+        self.ser.open()
         print("Set serial to port: ", portName)
 
     def createBeerList(self):
@@ -211,12 +229,14 @@ class MyIndicator:
 
         menuItemQuit.connect('activate', self.quit, "quit")
 
-        self.suboptionsNixie.connect("activate", self.writeArduino)
-        self.suboptionsLeds.connect("activate", self.writeArduino)
-        self.suboptionsColor.connect("activate", self.colorSelector)
-
         self.createBeerList()
         self.createPortList()
+
+        self.suboptionsNixie.connect("activate", self.writeArduino)
+        self.suboptionsLeds.connect("activate", self.writeArduino)
+        self.colorseldlg = None
+        self.suboptionsColor.connect("activate", self.colorSelector)
+
         self.loadfile()
 
         self.menu.show_all()
