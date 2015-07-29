@@ -8,7 +8,7 @@ byte number;
 //--- PINS ---//
 int scalePin = 0;
 int redPin = 3;
-int greenPin= 5;
+int greenPin = 5;
 int bluePin = 6;
 int nixieOne = 2;
 int nixieTwo = 4;

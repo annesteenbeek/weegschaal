@@ -108,10 +108,16 @@ class MyIndicator:
             if self.colorseldlg != None:
                 self.color = self.colorseldlg.colorsel.get_current_color()
             color = [gtk.gdk.Color.to_string(self.color)[i] for i in [1, 2, 5, 6, 9, 10]]
+
             color = ''.join(color)
-            # print(gtk.gdk.Color.to_string(color))
-            print(color)
-            self.ser.write(color)
+            nixie = self.suboptionsNixie.get_active()
+            leds = self.suboptionsLeds.get_active()
+            weight = self.emptyweight
+            writestring = str(nixie) + str(leds) + str(color) + str(weight)
+            print(writestring)
+            self.ser.open()
+            self.ser.write(writestring)
+            self.ser.close()
         self.savefile()
 
     def savefile(self):
@@ -160,7 +166,7 @@ class MyIndicator:
 
     def setPort(self, button, portName):
         self.ser.port = portName
-        self.ser.open()
+
         print("Set serial to port: ", portName)
 
     def createBeerList(self):
