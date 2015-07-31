@@ -1,5 +1,11 @@
 unsigned long waitStart;
 
+bool nixiesOn = false;
+bool ledsOn = false;
+String ledColor = "000000";
+String  emptyweightstring;
+int emptyweight = 0;
+
 int nixieson = 0;
 int ledson = 0;
 int num0, num1, num2;

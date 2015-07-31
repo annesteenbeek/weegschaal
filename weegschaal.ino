@@ -27,19 +27,36 @@ void loop() {
   sensorValue = analogRead(scalePin);
   weight = map(sensorValue, sensorStart, sensorLoaded, weight1, weight2); // het gewicht*10
 
+  // Read incomming serial data and decode
+  while (Serial.available()>0){
+    String serialdata = Serial.readStringUntil('\n');
+    if (serialdata.substring(0,4) == "True"){
+      nixiesOn = true;
+    }else{
+      nixiesOn = false;
+    }
 
-Serial.print(abs(weight)); Serial.print("\n");
-// Serial.println(sensorValue);
-if (Serial.available() != 0){
-  computerdata = Serial.readString();
-  emptyweight = computerdata / 10;
-  nixieson = computerdata - emptyweight*10;
-  
-  EEPROM.write(1, emptyweight);
-  
-}
+    if (serialdata.substring(4,8) == "True"){
+      ledsOn = true;
+    }else{
+      ledsOn = false;
+    }
 
-  if (nixieson == 1){
+    ledColor = serialdata.substring(8,14);
+    emptyweightstring = serialdata.substring(14);
+    emptyweight = emptyweightstring.toInt();
+    Serial.println(nixiesOn);
+    Serial.println(ledsOn);
+    Serial.println(ledColor);
+    Serial.println(emptyweight);
+  }
+  
+  // Enable and set RGB leds
+  if(ledsOn && nixiesOn){
+    setRGB(ledColor);
+  }
+
+  if (nixiesOn){
     int number = abs(weight) - emptyweight;
     num0 = number/100; // vind het eerste getal
     setNumber(nixieOne, num0);

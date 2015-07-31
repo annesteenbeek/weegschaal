@@ -14,6 +14,8 @@ import time
 import glib
 from serial.tools import list_ports
 import json
+import os
+import subprocess
 
 PING_FREQUENCY = 1  # seconds
 
@@ -40,6 +42,12 @@ class MyIndicator:
     # functions to handle events
     def quit(self, widget, data=None):
         gtk.main_quit()
+
+    def openFile(self, button, fileName):
+        if sys.platform == 'linux2':
+            subprocess.call(["xdg-open", fileName])
+        else:
+            os.startfile(fileName)
 
     def colorSelector(self, widget):
         handled = False
@@ -113,8 +121,7 @@ class MyIndicator:
             nixie = self.suboptionsNixie.get_active()
             leds = self.suboptionsLeds.get_active()
             weight = self.emptyweight
-            writestring = str(nixie) + str(leds) + str(color) + str(weight)
-            print(writestring)
+            writestring = str(nixie) + str(leds) + str(color) + str(int(weight * 10)) + "\n"
             self.ser.open()
             self.ser.write(writestring)
             self.ser.close()
@@ -157,6 +164,8 @@ class MyIndicator:
                 self.menuoptions.append(self.portdict[portName])
                 self.portdict[portName].connect("activate", self.setPort, portName)
                 if self.ser.port not in self.ports:
+                    print("Setting backup port: ")
+                    print(self.ports[0])
                     self.ser.port = self.ports[0]
                     self.portdict[self.ser.port].activate()
         if len(self.ports) == 0:
@@ -166,8 +175,6 @@ class MyIndicator:
 
     def setPort(self, button, portName):
         self.ser.port = portName
-
-        print("Set serial to port: ", portName)
 
     def createBeerList(self):
         self.beerdict = {}
@@ -186,7 +193,6 @@ class MyIndicator:
             self.beerdict[beer] = gtk.RadioMenuItem(group=groupname, label=beer)
             self.menubeer.append(self.beerdict[beer])
             self.beerdict[beer].connect("activate", self.kegSelect, beer, weight)
-        self.menubeer.append(gtk.SeparatorMenuItem())
 
     # Initialise
     def __init__(self):
@@ -232,6 +238,11 @@ class MyIndicator:
         self.menuoptions.append(self.suboptionsNixie)
         self.menuoptions.append(self.suboptionsLeds)
         self.menuoptions.append(self.suboptionsColor)
+        self.menuoptions.append(gtk.SeparatorMenuItem())
+        self.beerEdit = gtk.MenuItem(label="Edit beer list")
+        self.menuoptions.append(self.beerEdit)
+        self.beerEdit.connect("activate", self.openFile, "fustlijst.json")
+        self.menuoptions.append(gtk.SeparatorMenuItem())
 
         menuItemQuit.connect('activate', self.quit, "quit")
 

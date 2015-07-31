@@ -1,1 +1,1 @@
-{"ledcolor": "#FFFFFF", "kegtype": "grolsch", "emptyweight": 4, "nixieson": true, "ledson": true, "usbport": "/dev/ttyUSB0"}
+{"ledcolor": "#ffff2b93dfcc", "usbport": "/dev/ttyUSB1", "kegtype": "grolsch", "nixieson": true, "ledson": true}
