@@ -43,6 +43,37 @@ class MyIndicator:
     def quit(self, widget, data=None):
         gtk.main_quit()
 
+    def calWindow(self, button):
+        self.popup = gtk.Dialog(title='Calibrate Scale')
+        self.popup.entry = gtk.Entry()
+        self.popup.entry.set_text("Weight [kg]")
+        self.popup.vbox.pack_start(self.popup.entry, True, True, 0)
+
+        self.popup.zeroWeight = gtk.Button("0Kg on scale")
+        # self.popup.zeroWeight.connect("clicked", self.set_zero)
+        self.popup.vbox.pack_start(self.popup.zeroWeight, True, True, 0)
+
+        self.popup.weightButton = gtk.Button("Weight on scale")
+        # self.popup.weightButton.connect("clicked", self.set_weight)
+        self.popup.vbox.pack_start(self.popup.weightButton, True, True, 0)
+        self.popup.show_all()
+
+    def set_zero(self, button):
+        if bool(self.ser.port):
+            self.ser.open()
+            self.ser.write("setzero")
+            self.ser.close()
+        else:
+            print("No serial port available")
+
+    def set_weight(self, button):
+        if bool(self.ser.port):
+            self.ser.open()
+            self.ser.write(self.popup.entry.get_text())
+            self.ser.close()
+        else:
+            print("No serial port available")
+
     def openFile(self, button, fileName):
         if sys.platform == 'linux2':
             subprocess.call(["xdg-open", fileName])
@@ -125,6 +156,8 @@ class MyIndicator:
             self.ser.open()
             self.ser.write(writestring)
             self.ser.close()
+        else:
+            print("No serial port available")
         self.savefile()
 
     def savefile(self):
@@ -228,6 +261,7 @@ class MyIndicator:
         self.suboptionsNixie = gtk.CheckMenuItem("Nixies")
         self.suboptionsLeds = gtk.CheckMenuItem("LEDs")
         self.suboptionsColor = gtk.MenuItem("Select LED color")
+        self.suboptionsCal = gtk.MenuItem("Calibrate scale")
 
         self.menu.append(self.menuWeight)
         self.menu.append(gtk.SeparatorMenuItem())
@@ -238,6 +272,7 @@ class MyIndicator:
         self.menuoptions.append(self.suboptionsNixie)
         self.menuoptions.append(self.suboptionsLeds)
         self.menuoptions.append(self.suboptionsColor)
+        self.menuoptions.append(self.suboptionsCal)
         self.menuoptions.append(gtk.SeparatorMenuItem())
         self.beerEdit = gtk.MenuItem(label="Edit beer list")
         self.menuoptions.append(self.beerEdit)
@@ -253,6 +288,7 @@ class MyIndicator:
         self.suboptionsLeds.connect("activate", self.writeArduino)
         self.colorseldlg = None
         self.suboptionsColor.connect("activate", self.colorSelector)
+        self.suboptionsCal.connect("activate", self.calWindow)
 
         self.loadfile()
 
