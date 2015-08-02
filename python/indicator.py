@@ -68,8 +68,9 @@ class MyIndicator:
 
     def set_weight(self, button):
         if bool(self.ser.port):
+            sendstring = "setw" + self.popup.entry.get_text()
             self.ser.open()
-            self.ser.write(self.popup.entry.get_text())
+            self.ser.write(sendstring)
             self.ser.close()
         else:
             print("No serial port available")
@@ -236,7 +237,7 @@ class MyIndicator:
                                               appindicator.CATEGORY_APPLICATION_STATUS)
             self.ind.set_status(appindicator.STATUS_ACTIVE)
             self.ind.set_icon(
-                "/home/anne/Dropbox/Arduino/weegschaal/python/biertje.svg")
+                os.path.abspath("biertje.svg"))
         else:
             self.ind = gtk.status_icon_new_from_stock(gtk.STOCK_HOME)
 
