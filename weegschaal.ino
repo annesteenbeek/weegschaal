@@ -30,25 +30,33 @@ void loop() {
   // Read incomming serial data and decode
   while (Serial.available()>0){
     String serialdata = Serial.readStringUntil('\n');
-    if (serialdata.substring(0,4) == "True"){
-      nixiesOn = true;
-    }else{
-      nixiesOn = false;
+    if (serialdata == "setzero"){
+      zerovolt = voltage;
     }
-
-    if (serialdata.substring(4,8) == "True"){
-      ledsOn = true;
-    }else{
-      ledsOn = false;
+    else if (serialdata.substring(0,4) == "setW"){
+        calweight = float(serialdata.substring(4));
+        calvolt = voltage;
     }
-
-    ledColor = serialdata.substring(8,14);
-    emptyweightstring = serialdata.substring(14);
-    emptyweight = emptyweightstring.toInt();
-    Serial.println(nixiesOn);
-    Serial.println(ledsOn);
-    Serial.println(ledColor);
-    Serial.println(emptyweight);
+    else{
+      if (serialdata.substring(0,4) == "True"){
+          nixiesOn = true;
+        }else{
+          nixiesOn = false;
+        }
+  
+        if (serialdata.substring(4,8) == "True"){
+          ledsOn = true;
+        }else{
+          ledsOn = false;
+        }
+      ledColor = serialdata.substring(8,14);
+      emptyweightstring = serialdata.substring(14);
+      emptyweight = emptyweightstring.toInt();
+      Serial.println(nixiesOn);
+      Serial.println(ledsOn);
+      Serial.println(ledColor);
+      Serial.println(emptyweight);
+      }
   }
   
   // Enable and set RGB leds
